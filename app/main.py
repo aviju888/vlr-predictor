@@ -25,11 +25,12 @@ app.add_middleware(
 )
 
 # Include routers
-from app.routers import predictions, matches, health
+from app.routers import predictions, matches, health, teams
 
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(predictions.router, prefix="/predictions", tags=["predictions"])
 app.include_router(matches.router, prefix="/matches", tags=["matches"])
+app.include_router(teams.router, prefix="/teams", tags=["teams"])
 
 @app.on_event("startup")
 async def startup_event():
