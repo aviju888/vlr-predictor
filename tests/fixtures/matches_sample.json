@@ -1,0 +1,136 @@
+{
+  "matches": [
+    {
+      "id": "match_001",
+      "team1": {
+        "id": "team1",
+        "name": "Sentinels",
+        "slug": "sentinels",
+        "logo_url": "https://example.com/sentinels.png",
+        "country": "United States"
+      },
+      "team2": {
+        "id": "team2",
+        "name": "Team Liquid",
+        "slug": "team-liquid",
+        "logo_url": "https://example.com/liquid.png",
+        "country": "United States"
+      },
+      "status": "completed",
+      "scheduled_time": "2024-01-15T20:00:00Z",
+      "score": {
+        "team1": 2,
+        "team2": 1
+      },
+      "maps": [
+        {
+          "name": "Bind",
+          "slug": "bind",
+          "score": {
+            "team1": 13,
+            "team2": 11
+          },
+          "image_url": "https://example.com/bind.jpg"
+        },
+        {
+          "name": "Haven",
+          "slug": "haven",
+          "score": {
+            "team1": 11,
+            "team2": 13
+          },
+          "image_url": "https://example.com/haven.jpg"
+        },
+        {
+          "name": "Split",
+          "slug": "split",
+          "score": {
+            "team1": 13,
+            "team2": 9
+          },
+          "image_url": "https://example.com/split.jpg"
+        }
+      ],
+      "tournament": "VCT 2024",
+      "round": "Group Stage"
+    },
+    {
+      "id": "match_002",
+      "team1": {
+        "id": "team3",
+        "name": "Cloud9",
+        "slug": "cloud9",
+        "logo_url": "https://example.com/cloud9.png",
+        "country": "United States"
+      },
+      "team2": {
+        "id": "team4",
+        "name": "100 Thieves",
+        "slug": "100-thieves",
+        "logo_url": "https://example.com/100t.png",
+        "country": "United States"
+      },
+      "status": "live",
+      "scheduled_time": "2024-01-16T18:00:00Z",
+      "score": {
+        "team1": 1,
+        "team2": 0
+      },
+      "maps": [
+        {
+          "name": "Ascent",
+          "slug": "ascent",
+          "score": {
+            "team1": 13,
+            "team2": 7
+          },
+          "image_url": "https://example.com/ascent.jpg"
+        },
+        {
+          "name": "Icebox",
+          "slug": "icebox",
+          "score": {
+            "team1": 8,
+            "team2": 6
+          },
+          "image_url": "https://example.com/icebox.jpg"
+        }
+      ],
+      "tournament": "VCT 2024",
+      "round": "Group Stage"
+    },
+    {
+      "id": "match_003",
+      "team1": {
+        "id": "team5",
+        "name": "Fnatic",
+        "slug": "fnatic",
+        "logo_url": "https://example.com/fnatic.png",
+        "country": "United Kingdom"
+      },
+      "team2": {
+        "id": "team6",
+        "name": "G2 Esports",
+        "slug": "g2-esports",
+        "logo_url": "https://example.com/g2.png",
+        "country": "Germany"
+      },
+      "status": "upcoming",
+      "scheduled_time": "2024-01-17T16:00:00Z",
+      "score": {
+        "team1": 0,
+        "team2": 0
+      },
+      "maps": [],
+      "tournament": "VCT 2024",
+      "round": "Group Stage"
+    }
+  ],
+  "metadata": {
+    "total_matches": 3,
+    "completed": 1,
+    "live": 1,
+    "upcoming": 1,
+    "last_updated": "2024-01-16T12:00:00Z"
+  }
+}

@@ -1,0 +1,214 @@
+"""Match summarization with templates and optional LLM refinement."""
+
+import json
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+from app.config import settings
+from app.logging_utils import get_logger
+
+logger = get_logger(__name__)
+
+class MatchSummarizer:
+    """Generate match summaries using templates and optional LLM."""
+    
+    def __init__(self):
+        self.use_llm = settings.use_llm_summarization and bool(settings.openai_api_key)
+        if self.use_llm:
+            self._setup_llm()
+    
+    def _setup_llm(self):
+        """Setup LLM client if available."""
+        try:
+            import openai
+            self.openai_client = openai.OpenAI(api_key=settings.openai_api_key)
+            logger.info("LLM summarization enabled")
+        except ImportError:
+            logger.warning("OpenAI not available, falling back to template summarization")
+            self.use_llm = False
+        except Exception as e:
+            logger.warning(f"Failed to setup LLM: {e}")
+            self.use_llm = False
+    
+    async def summarize_match(self, match_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate match summary."""
+        try:
+            if self.use_llm:
+                return await self._llm_summarize(match_data)
+            else:
+                return self._template_summarize(match_data)
+        except Exception as e:
+            logger.error(f"Error generating summary: {e}")
+            return self._fallback_summary(match_data)
+    
+    def _template_summarize(self, match_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate summary using templates."""
+        try:
+            # Extract basic match info
+            team1 = match_data.get('team1', {})
+            team2 = match_data.get('team2', {})
+            score = match_data.get('score', {})
+            maps = match_data.get('maps', [])
+            
+            # Generate template summary
+            summary_parts = []
+            
+            # Match header
+            summary_parts.append(f"Match: {team1.get('name', 'Team 1')} vs {team2.get('name', 'Team 2')}")
+            
+            # Score
+            if score:
+                summary_parts.append(f"Final Score: {score.get('team1', 0)} - {score.get('team2', 0)}")
+            
+            # Map results
+            if maps:
+                summary_parts.append("Map Results:")
+                for i, map_info in enumerate(maps, 1):
+                    map_name = map_info.get('name', f'Map {i}')
+                    map_score = map_info.get('score', {})
+                    summary_parts.append(f"  {map_name}: {map_score.get('team1', 0)} - {map_score.get('team2', 0)}")
+            
+            # Key highlights
+            highlights = self._extract_highlights(match_data)
+            
+            # Team performance
+            team1_perf = self._extract_team_performance(match_data, 'team1')
+            team2_perf = self._extract_team_performance(match_data, 'team2')
+            
+            summary = "\n".join(summary_parts)
+            
+            return {
+                "summary": summary,
+                "key_highlights": highlights,
+                "team1_performance": team1_perf,
+                "team2_performance": team2_perf,
+                "generated_at": datetime.utcnow(),
+                "used_llm": False
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in template summarization: {e}")
+            return self._fallback_summary(match_data)
+    
+    async def _llm_summarize(self, match_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate summary using LLM."""
+        try:
+            # Prepare context for LLM
+            context = self._prepare_llm_context(match_data)
+            
+            prompt = f"""
+            Summarize this Valorant esports match in a concise and engaging way.
+            Focus on key moments, standout performances, and the overall narrative.
+            
+            Match Data:
+            {json.dumps(context, indent=2)}
+            
+            Please provide:
+            1. A brief match summary (2-3 sentences)
+            2. 3-5 key highlights
+            3. Brief performance notes for each team
+            """
+            
+            response = await self.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are an expert Valorant esports analyst."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            
+            llm_summary = response.choices[0].message.content
+            
+            # Parse LLM response (simple parsing for now)
+            summary_lines = llm_summary.split('\n')
+            summary = summary_lines[0] if summary_lines else "Match summary generated by AI"
+            
+            highlights = [line.strip('- ').strip() for line in summary_lines[1:] if line.strip().startswith('-')]
+            if not highlights:
+                highlights = ["AI-generated highlights available"]
+            
+            return {
+                "summary": summary,
+                "key_highlights": highlights[:5],  # Limit to 5 highlights
+                "team1_performance": self._extract_team_performance(match_data, 'team1'),
+                "team2_performance": self._extract_team_performance(match_data, 'team2'),
+                "generated_at": datetime.utcnow(),
+                "used_llm": True,
+                "raw_llm_response": llm_summary
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in LLM summarization: {e}")
+            # Fallback to template
+            return self._template_summarize(match_data)
+    
+    def _prepare_llm_context(self, match_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepare context for LLM summarization."""
+        return {
+            "teams": {
+                "team1": match_data.get('team1', {}),
+                "team2": match_data.get('team2', {})
+            },
+            "score": match_data.get('score', {}),
+            "maps": match_data.get('maps', []),
+            "tournament": match_data.get('tournament', ''),
+            "status": match_data.get('status', ''),
+            "timestamp": match_data.get('timestamp', datetime.utcnow().isoformat())
+        }
+    
+    def _extract_highlights(self, match_data: Dict[str, Any]) -> List[str]:
+        """Extract key highlights from match data."""
+        highlights = []
+        
+        # Add basic highlights based on available data
+        score = match_data.get('score', {})
+        if score:
+            team1_score = score.get('team1', 0)
+            team2_score = score.get('team2', 0)
+            
+            if abs(team1_score - team2_score) <= 1:
+                highlights.append("Close match with tight scoreline")
+            elif team1_score > team2_score:
+                highlights.append(f"{match_data.get('team1', {}).get('name', 'Team 1')} dominated the match")
+            else:
+                highlights.append(f"{match_data.get('team2', {}).get('name', 'Team 2')} dominated the match")
+        
+        # Add map-specific highlights
+        maps = match_data.get('maps', [])
+        if maps:
+            highlights.append(f"Match played across {len(maps)} map(s)")
+        
+        # Add tournament context
+        tournament = match_data.get('tournament', '')
+        if tournament:
+            highlights.append(f"Part of {tournament}")
+        
+        return highlights[:5]  # Limit to 5 highlights
+    
+    def _extract_team_performance(self, match_data: Dict[str, Any], team_key: str) -> Dict[str, Any]:
+        """Extract team performance metrics."""
+        team_data = match_data.get(team_key, {})
+        
+        return {
+            "team_name": team_data.get('name', 'Unknown'),
+            "score": match_data.get('score', {}).get(team_key.replace('team', ''), 0),
+            "performance_rating": "Good" if match_data.get('score', {}).get(team_key.replace('team', ''), 0) > 0 else "Needs improvement",
+            "key_players": [],  # Would extract from player stats if available
+            "notes": f"Performance data for {team_data.get('name', 'Unknown')}"
+        }
+    
+    def _fallback_summary(self, match_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback summary when other methods fail."""
+        return {
+            "summary": "Match summary unavailable due to processing error",
+            "key_highlights": ["Summary generation failed"],
+            "team1_performance": {"team_name": "Unknown", "error": "Data unavailable"},
+            "team2_performance": {"team_name": "Unknown", "error": "Data unavailable"},
+            "generated_at": datetime.utcnow(),
+            "used_llm": False,
+            "error": "Summary generation failed"
+        }
+
+# Global summarizer instance
+match_summarizer = MatchSummarizer()
