@@ -53,37 +53,29 @@ class FeatureStore:
         """Process raw team stats into features."""
         try:
             # Extract key metrics from VLR.gg response
-            matches = raw_stats.get("matches", [])
+            # The VLR client returns summary_stats directly, not individual matches
+            summary_stats = raw_stats.get("summary_stats", {})
             
-            if not matches:
+            if not summary_stats:
+                logger.warning(f"No summary stats found for team {team_id}")
                 return self._get_default_team_stats(team_id)
             
-            # Calculate averages
-            total_acs = 0
-            total_kd = 0
-            total_rating = 0
-            wins = 0
-            maps_played = len(matches)
+            # Extract team name from the team object
+            team_info = raw_stats.get("team", {})
+            team_name = team_info.get("name", "Unknown")
             
-            for match in matches:
-                # Extract team performance from match data
-                team_performance = self._extract_team_performance(match, team_id)
-                if team_performance:
-                    total_acs += team_performance.get("avg_acs", 0)
-                    total_kd += team_performance.get("avg_kd", 0)
-                    total_rating += team_performance.get("avg_rating", 0)
-                    if team_performance.get("won", False):
-                        wins += 1
+            # Use the pre-calculated stats from VLR client
+            avg_acs = summary_stats.get("avg_acs", 0.0)
+            avg_kd = summary_stats.get("avg_kd", 0.0)
+            avg_rating = summary_stats.get("avg_rating", 0.0)
+            win_rate = summary_stats.get("win_rate", 0.0)
+            maps_played = summary_stats.get("maps_played", 0)
             
-            # Calculate averages
-            avg_acs = total_acs / maps_played if maps_played > 0 else 0
-            avg_kd = total_kd / maps_played if maps_played > 0 else 0
-            avg_rating = total_rating / maps_played if maps_played > 0 else 0
-            win_rate = wins / maps_played if maps_played > 0 else 0
+            logger.info(f"Processed stats for {team_name}: ACS={avg_acs}, K/D={avg_kd}, Rating={avg_rating}, Win Rate={win_rate}")
             
             return {
                 "team_id": team_id,
-                "team_name": raw_stats.get("team", {}).get("name", "Unknown"),
+                "team_name": team_name,
                 "avg_acs": round(avg_acs, 2),
                 "avg_kd": round(avg_kd, 2),
                 "avg_rating": round(avg_rating, 2),

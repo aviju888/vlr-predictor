@@ -154,6 +154,7 @@ cache/
 
 # Documentation
 SPEC.md
+todo-and-accomplished.md
 
 # API keys and secrets
 .env.local

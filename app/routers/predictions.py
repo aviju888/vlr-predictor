@@ -118,3 +118,21 @@ async def predict_match_trained(request: PredictionRequest):
     except Exception as e:
         logger.error(f"Trained prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Trained prediction failed: {str(e)}")
+
+@router.get("/debug/team/{team_id}")
+async def debug_team_stats(team_id: str):
+    """Debug endpoint to test team stats retrieval."""
+    try:
+        # Get team statistics directly
+        team_stats = await feature_store.get_team_stats(team_id)
+        return {
+            "team_id": team_id,
+            "stats": team_stats,
+            "success": True
+        }
+    except Exception as e:
+        return {
+            "team_id": team_id,
+            "error": str(e),
+            "success": False
+        }

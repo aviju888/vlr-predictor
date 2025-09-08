@@ -24,31 +24,36 @@ async def get_matches(
         matches = []
         for match_data in matches_data:
             try:
+                # VLR.gg API returns team names as strings, not objects
+                team1_name = match_data.get("team1", "Unknown Team")
+                team2_name = match_data.get("team2", "Unknown Team")
+                
                 match = Match(
-                    id=match_data.get("id", ""),
+                    id=match_data.get("match_page", "").split("/")[-1] if match_data.get("match_page") else "",
                     team1={
-                        "id": match_data.get("team1", {}).get("id", ""),
-                        "name": match_data.get("team1", {}).get("name", ""),
-                        "slug": match_data.get("team1", {}).get("slug", ""),
-                        "logo_url": match_data.get("team1", {}).get("logo_url"),
-                        "country": match_data.get("team1", {}).get("country")
+                        "id": team1_name.lower().replace(" ", "_"),
+                        "name": team1_name,
+                        "slug": team1_name.lower().replace(" ", "-"),
+                        "logo_url": None,
+                        "country": match_data.get("flag1", "").replace("flag_", "") if match_data.get("flag1") else None
                     },
                     team2={
-                        "id": match_data.get("team2", {}).get("id", ""),
-                        "name": match_data.get("team2", {}).get("name", ""),
-                        "slug": match_data.get("team2", {}).get("slug", ""),
-                        "logo_url": match_data.get("team2", {}).get("logo_url"),
-                        "country": match_data.get("team2", {}).get("country")
+                        "id": team2_name.lower().replace(" ", "_"),
+                        "name": team2_name,
+                        "slug": team2_name.lower().replace(" ", "-"),
+                        "logo_url": None,
+                        "country": match_data.get("flag2", "").replace("flag_", "") if match_data.get("flag2") else None
                     },
-                    status=match_data.get("status", "upcoming"),
-                    scheduled_time=match_data.get("scheduled_time"),
-                    maps=match_data.get("maps", []),
-                    tournament=match_data.get("tournament"),
-                    round=match_data.get("round")
+                    status="upcoming",  # VLR.gg doesn't provide status in this format
+                    scheduled_time=match_data.get("unix_timestamp"),
+                    maps=[],  # VLR.gg doesn't provide map info in upcoming matches
+                    tournament=match_data.get("match_event"),
+                    round=match_data.get("match_series")
                 )
                 matches.append(match)
             except Exception as e:
                 logger.warning(f"Failed to parse match data: {e}")
+                logger.warning(f"Match data: {match_data}")
                 continue
         
         return matches
