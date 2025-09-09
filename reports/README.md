@@ -18,6 +18,7 @@ This directory contains validation reports and analysis documents for the VLR Va
 - **`report-4-final-analysis.md`** - Final analysis of synthetic data issues
 - **`report-5-realistic-model.md`** - Realistic model training results (64.3% accuracy)
 - **`report-6-data-leakage-fix-summary.md`** - Complete data leakage fix summary
+- **`report-8-production-fixes-and-vct-integration.md`** - **CRITICAL BUG FIXES** - Asymmetric predictions, model inversion, and VCT integration
 
 ## 🎯 **Key Achievements**
 
