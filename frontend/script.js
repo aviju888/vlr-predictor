@@ -16,8 +16,8 @@ class VLRPredictor {
         try {
             this.showLoading(true);
             
-            // Load professional teams only from our API
-            const response = await fetch(`${this.apiBase}/teams/rankings?professional_only=true&limit=50&_t=${Date.now()}`);
+            // Load teams from the new advanced prediction system
+            const response = await fetch(`${this.apiBase}/advanced/available-teams?_t=${Date.now()}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -26,8 +26,8 @@ class VLRPredictor {
             const data = await response.json();
             this.teams = data.teams || [];
             
-            console.log(`Loaded ${this.teams.length} professional teams from ${data.regions?.length || 0} regions`);
-            console.log('Sample professional teams:', this.teams.slice(0, 5));
+            console.log(`Loaded ${this.teams.length} teams from VLR.gg data`);
+            console.log('Sample teams:', this.teams.slice(0, 5));
             
         } catch (error) {
             console.error('Failed to load teams:', error);
@@ -45,49 +45,22 @@ class VLRPredictor {
         team1Select.innerHTML = '<option value="">Select Team 1</option>';
         team2Select.innerHTML = '<option value="">Select Team 2</option>';
         
-        // Sort teams by rank (lower rank number = better team)
-        const sortedTeams = [...this.teams].sort((a, b) => {
-            const rankA = parseInt(a.rank) || 999;
-            const rankB = parseInt(b.rank) || 999;
-            return rankA - rankB;
-        });
+        // Sort teams alphabetically (VLR.gg teams don't have ranks)
+        const sortedTeams = [...this.teams].sort((a, b) => a.localeCompare(b));
         
-        // Group teams by region
-        const teamsByRegion = {};
+        // Add teams to both dropdowns
         sortedTeams.forEach(team => {
-            if (!teamsByRegion[team.region]) {
-                teamsByRegion[team.region] = [];
-            }
-            teamsByRegion[team.region].push(team);
-        });
-        
-        // Add teams grouped by region (prioritize better teams)
-        Object.keys(teamsByRegion).sort().forEach(region => {
-            const regionTeams = teamsByRegion[region];
+            const option1 = document.createElement('option');
+            option1.value = team;
+            option1.textContent = team;
+            option1.dataset.team = team;
+            team1Select.appendChild(option1);
             
-            // Add region header to team1
-            const optgroup1 = document.createElement('optgroup');
-            optgroup1.label = `${region} (${regionTeams.length} teams)`;
-            team1Select.appendChild(optgroup1);
-            
-            // Add region header to team2
-            const optgroup2 = document.createElement('optgroup');
-            optgroup2.label = `${region} (${regionTeams.length} teams)`;
-            team2Select.appendChild(optgroup2);
-            
-            regionTeams.forEach(team => {
-                const option1 = document.createElement('option');
-                option1.value = team.team_id;
-                option1.textContent = `${team.team} (${team.region}, #${team.rank})`;
-                option1.dataset.team = JSON.stringify(team);
-                optgroup1.appendChild(option1);
-                
-                const option2 = document.createElement('option');
-                option2.value = team.team_id;
-                option2.textContent = `${team.team} (${team.region}, #${team.rank})`;
-                option2.dataset.team = JSON.stringify(team);
-                optgroup2.appendChild(option2);
-            });
+            const option2 = document.createElement('option');
+            option2.value = team;
+            option2.textContent = team;
+            option2.dataset.team = team;
+            team2Select.appendChild(option2);
         });
     }
 
@@ -120,39 +93,7 @@ class VLRPredictor {
         const select = document.getElementById(teamNumber);
         const options = select.querySelectorAll('option');
         
-        // If search term is long enough, try API search for better results
-        if (searchTerm.length >= 3) {
-            try {
-                const response = await fetch(`${this.apiBase}/teams/search?query=${encodeURIComponent(searchTerm)}&limit=10&_t=${Date.now()}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.teams && data.teams.length > 0) {
-                        // Clear current options except placeholder
-                        select.innerHTML = '<option value="">Select Team</option>';
-                        
-                        // Add search results
-                        data.teams.forEach(team => {
-                            const option = document.createElement('option');
-                            option.value = team.team_id;
-                            option.textContent = `${team.team} (${team.region}, #${team.rank})`;
-                            option.dataset.team = JSON.stringify(team);
-                            select.appendChild(option);
-                        });
-                        
-                        // If only one result, auto-select it
-                        if (data.teams.length === 1) {
-                            select.value = data.teams[0].team_id;
-                            this.handleTeamSelection({ target: { selectedOptions: [select.options[1]] } }, teamNumber);
-                        }
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.warn('API search failed, falling back to local filtering:', error);
-            }
-        }
-        
-        // Fallback to local filtering
+        // Simple local filtering for VLR.gg teams
         options.forEach(option => {
             if (option.value === '') {
                 option.style.display = 'block'; // Always show placeholder
@@ -188,14 +129,11 @@ class VLRPredictor {
         const teamInfo = document.getElementById(`${teamNumber}-info`);
         
         if (selectedOption && selectedOption.dataset.team) {
-            const team = JSON.parse(selectedOption.dataset.team);
+            const team = selectedOption.dataset.team;
             teamInfo.innerHTML = `
-                <h3>${team.team}</h3>
-                <p><strong>Region:</strong> ${team.region}</p>
-                <p><strong>Rank:</strong> #${team.rank}</p>
-                <p><strong>Record:</strong> ${team.record}</p>
-                <p><strong>Earnings:</strong> ${team.earnings}</p>
-                <p><strong>Last Played:</strong> ${team.last_played}</p>
+                <h3>${team}</h3>
+                <p><strong>Source:</strong> VLR.gg Data</p>
+                <p><strong>Status:</strong> Active Team</p>
             `;
             teamInfo.classList.add('show');
         } else {
@@ -204,17 +142,17 @@ class VLRPredictor {
     }
 
     async makePrediction() {
-        const team1Id = document.getElementById('team1').value;
-        const team2Id = document.getElementById('team2').value;
+        const team1Name = document.getElementById('team1').value;
+        const team2Name = document.getElementById('team2').value;
         const mapName = document.getElementById('map-select').value;
         const modelType = document.getElementById('model-select').value;
         
-        if (!team1Id || !team2Id) {
+        if (!team1Name || !team2Name) {
             this.showError('Please select both teams before making a prediction.');
             return;
         }
         
-        if (team1Id === team2Id) {
+        if (team1Name === team2Name) {
             this.showError('Please select different teams.');
             return;
         }
@@ -222,31 +160,22 @@ class VLRPredictor {
         try {
             this.showLoading(true);
             
-            // Determine API endpoint based on model type
-            let endpoint = '/predictions/predict';
-            if (modelType === 'enhanced') {
-                endpoint = '/predictions/predict/enhanced';
-            } else if (modelType === 'sos') {
-                endpoint = '/predictions/predict/sos';
-            } else if (modelType === 'trained') {
-                endpoint = '/predictions/predict/trained';
-            }
-            
-            // Add map parameter if specified
-            const url = new URL(`${this.apiBase}${endpoint}`);
+            // Use the realistic prediction endpoint (zero data leakage)
+            const url = new URL(`${this.apiBase}/advanced/realistic/map-predict`);
+            url.searchParams.append('teamA', team1Name);
+            url.searchParams.append('teamB', team2Name);
             if (mapName) {
                 url.searchParams.append('map_name', mapName);
+            } else {
+                // Default to Ascent if no map selected
+                url.searchParams.append('map_name', 'Ascent');
             }
             
             const response = await fetch(url, {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    team1_id: team1Id,
-                    team2_id: team2Id
-                })
+                }
             });
             
             if (!response.ok) {
@@ -254,11 +183,23 @@ class VLRPredictor {
             }
             
             const prediction = await response.json();
-            this.displayPrediction(prediction);
             
-            // Load additional data
-            await this.loadHeadToHead(team1Id, team2Id);
-            await this.loadTeamForm(team1Id, team2Id);
+            // Check if all features are zero (indicates teams not in dataset)
+            const hasRealData = prediction.features && Object.values(prediction.features).some(v => Math.abs(v) > 0.001);
+            
+            if (!hasRealData) {
+                this.displayNoDataWarning(prediction, team1Name, team2Name);
+                return;
+            }
+            
+            // Check if user wants series prediction too
+            const shouldShowSeries = !mapName; // If no specific map selected, show series
+            
+            this.displayMapResultCard(prediction);
+            
+            if (shouldShowSeries) {
+                await this.loadSeriesPrediction(team1Name, team2Name);
+            }
             
         } catch (error) {
             console.error('Prediction failed:', error);
@@ -266,6 +207,150 @@ class VLRPredictor {
         } finally {
             this.showLoading(false);
         }
+    }
+
+    displayMapResultCard(prediction) {
+        const resultsSection = document.getElementById('results-section');
+        const resultsDiv = document.getElementById('prediction-results');
+
+        const probA = prediction.prob_teamA;
+        const probB = prediction.prob_teamB;
+        const teamA = prediction.teamA;
+        const teamB = prediction.teamB;
+        const mapName = prediction.map_name;
+        const confidence = prediction.confidence;
+        const uncertainty = prediction.uncertainty || 'Medium';
+        const explanation = prediction.explanation;
+        const features = prediction.features;
+        
+        // Get uncertainty chip color
+        const getUncertaintyColor = (uncertainty) => {
+            switch(uncertainty.toLowerCase()) {
+                case 'low': return '#22c55e';
+                case 'medium': return '#f59e0b';
+                case 'high': return '#ef4444';
+                default: return '#6b7280';
+            }
+        };
+        
+        // Build key factors (top 3 features)
+        const buildKeyFactors = (features) => {
+            if (!features) return '<li>Historical performance patterns</li>';
+            
+            const allFeatures = Object.entries(features)
+                .map(([key, value]) => ({ key, value: Number(value) || 0, absValue: Math.abs(Number(value) || 0) }))
+                .filter(f => f.absValue > 0.001)
+                .sort((a, b) => b.absValue - a.absValue)
+                .slice(0, 3);
+                
+            if (allFeatures.length === 0) {
+                return '<li>Limited historical data available</li><li>Prediction based on basic team comparison</li><li>Higher uncertainty due to data constraints</li>';
+            }
+            
+            return allFeatures.map(f => {
+                const displayName = f.key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const direction = f.value > 0 ? 'advantage' : 'disadvantage';
+                const impact = f.absValue > 0.2 ? 'Strong' : f.absValue > 0.1 ? 'Moderate' : 'Slight';
+                return `<li>${impact} ${displayName.toLowerCase()} ${direction} (${f.value > 0 ? '+' : ''}${f.value.toFixed(3)})</li>`;
+            }).join('');
+        };
+        
+        resultsDiv.innerHTML = `
+            <div class="map-result-card fade-in">
+                <!-- Header with big percentage -->
+                <div class="map-result-header">
+                    <div class="map-title">
+                        <i class="fas fa-map"></i>
+                        <span>${mapName} Prediction</span>
+                    </div>
+                    <div class="confidence-chip" style="background-color: ${getUncertaintyColor(uncertainty)}20; color: ${getUncertaintyColor(uncertainty)};">
+                        ${uncertainty} Confidence
+                    </div>
+                </div>
+                
+                <!-- Big percentage display -->
+                <div class="probability-display">
+                    <div class="team-prob ${probA > probB ? 'winner' : ''}">
+                        <div class="team-name">${teamA}</div>
+                        <div class="big-percentage">${(probA * 100).toFixed(1)}%</div>
+                    </div>
+                    
+                    <div class="vs-separator">vs</div>
+                    
+                    <div class="team-prob ${probB > probA ? 'winner' : ''}">
+                        <div class="team-name">${teamB}</div>
+                        <div class="big-percentage">${(probB * 100).toFixed(1)}%</div>
+                    </div>
+                </div>
+                
+                <!-- Winner declaration -->
+                <div class="winner-declaration">
+                    <i class="fas fa-trophy"></i>
+                    <span>Predicted Winner: <strong>${probA > probB ? teamA : teamB}</strong></span>
+                </div>
+                
+                <!-- One-line explanation -->
+                <div class="explanation-line">
+                    ${explanation}
+                </div>
+                
+                <!-- Key factors (3 bullets) -->
+                <div class="key-factors">
+                    <h4><i class="fas fa-chart-line"></i> Key Factors:</h4>
+                    <ul>
+                        ${buildKeyFactors(features)}
+                    </ul>
+                </div>
+                
+                <!-- Model info -->
+                <div class="model-info">
+                    <span><strong>Model:</strong> ${prediction.model_version}</span>
+                    <span><strong>Data:</strong> VLR.gg Historical</span>
+                </div>
+            </div>
+        `;
+
+        resultsSection.style.display = 'block';
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    displayNoDataWarning(prediction, teamA, teamB) {
+        const resultsSection = document.getElementById('results-section');
+        const resultsDiv = document.getElementById('prediction-results');
+        
+        resultsDiv.innerHTML = `
+            <div class="no-data-warning fade-in">
+                <div class="warning-header">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Limited Data Available</h3>
+                </div>
+                
+                <div class="warning-content">
+                    <p><strong>${teamA}</strong> vs <strong>${teamB}</strong></p>
+                    <p>These teams have limited historical data in our current dataset.</p>
+                    
+                    <div class="fallback-prediction">
+                        <h4>Basic Prediction (Low Confidence):</h4>
+                        <div class="basic-result">
+                            <span class="team-name">${prediction.winner}</span>
+                            <span class="basic-prob">${(prediction.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                        <p class="uncertainty-note">
+                            <i class="fas fa-info-circle"></i>
+                            This prediction is based on limited data and should be treated with high uncertainty.
+                        </p>
+                    </div>
+                    
+                    <div class="data-suggestion">
+                        <h4>Available Teams with Better Data:</h4>
+                        <p>Try teams like: <strong>BOARS</strong>, <strong>DNSTY</strong>, <strong>100 Thieves GC</strong>, <strong>EMPIRE :3</strong></p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        resultsSection.style.display = 'block';
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
 
     displayPrediction(prediction) {
@@ -465,9 +550,9 @@ class VLRPredictor {
         `;
     }
 
-    getTeamName(teamId) {
-        const team = this.teams.find(t => t.team_id === teamId);
-        return team ? team.team : null;
+    getTeamName(teamName) {
+        // For VLR.gg teams, we use the team name directly
+        return teamName;
     }
 
     showLoading(show) {
@@ -483,6 +568,104 @@ class VLRPredictor {
         }
     }
 
+    async loadSeriesPrediction(teamA, teamB) {
+        try {
+            const url = new URL(`${this.apiBase}/advanced/series-predict`);
+            url.searchParams.append('teamA', teamA);
+            url.searchParams.append('teamB', teamB);
+            url.searchParams.append('topN', '3');
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const seriesData = await response.json();
+            this.displaySeriesResultCard(seriesData);
+            
+        } catch (error) {
+            console.warn('Failed to load series prediction:', error);
+            // Don't show error for series prediction failure
+        }
+    }
+    
+    displaySeriesResultCard(seriesData) {
+        const resultsDiv = document.getElementById('prediction-results');
+        
+        const teamA = seriesData.teamA;
+        const teamB = seriesData.teamB;
+        const headline = seriesData.headline;
+        const alternatives = seriesData.alternatives || [];
+        
+        // Check if we have realistic probabilities (not 100%)
+        const isRealistic = headline.prob_teamA < 0.99 && headline.prob_teamB < 0.99;
+        
+        if (!isRealistic) {
+            // Skip series prediction if it's showing unrealistic 100% probabilities
+            return;
+        }
+        
+        const buildMapBreakdown = (perMap) => {
+            return perMap.map(m => 
+                `<div class="map-breakdown">
+                    <span class="map-name">${m.map}</span>
+                    <span class="map-probs">${(m.prob_teamA * 100).toFixed(0)}% | ${(m.prob_teamB * 100).toFixed(0)}%</span>
+                </div>`
+            ).join('');
+        };
+        
+        const buildAlternatives = (alts) => {
+            return alts.slice(0, 2).map((alt, index) => 
+                `<div class="alternative-combo">
+                    <span class="combo-rank">${index === 0 ? '🥈' : '🥉'}</span>
+                    <span class="combo-maps">${alt.maps.join(', ')}</span>
+                    <span class="combo-prob">(${(alt.prob_teamA * 100).toFixed(1)}%)</span>
+                </div>`
+            ).join('');
+        };
+        
+        const seriesCard = `
+            <div class="series-result-card fade-in">
+                <!-- Header -->
+                <div class="series-header">
+                    <div class="series-title">
+                        <i class="fas fa-trophy"></i>
+                        <span>BO3 Series Prediction</span>
+                    </div>
+                </div>
+                
+                <!-- Best combo headline -->
+                <div class="headline-combo">
+                    <div class="combo-header">
+                        <span class="combo-medal">🥇</span>
+                        <span class="combo-label">Best Combo:</span>
+                        <span class="combo-maps">${headline.maps.join(', ')}</span>
+                    </div>
+                    <div class="combo-result">
+                        <span class="combo-winner">${headline.prob_teamA > headline.prob_teamB ? teamA : teamB}</span>
+                        <span class="combo-percentage">${(Math.max(headline.prob_teamA, headline.prob_teamB) * 100).toFixed(1)}%</span>
+                    </div>
+                </div>
+                
+                <!-- Alternative combos -->
+                <div class="alternative-combos">
+                    <h4><i class="fas fa-list"></i> Alternative Combos:</h4>
+                    ${buildAlternatives(alternatives)}
+                </div>
+                
+                <!-- Per-map breakdown -->
+                <div class="map-breakdown-section">
+                    <h4><i class="fas fa-chart-bar"></i> Per-Map Breakdown:</h4>
+                    <div class="map-breakdowns">
+                        ${buildMapBreakdown(headline.per_map)}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        resultsDiv.innerHTML += seriesCard;
+    }
+    
     showError(message) {
         // Create a simple error notification
         const errorDiv = document.createElement('div');
