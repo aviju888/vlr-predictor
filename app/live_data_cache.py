@@ -24,7 +24,7 @@ from app.logging_utils import get_logger
 logger = get_logger(__name__)
 
 class LiveDataCache:
-    """Intelligent cache for live team data with 100-day lookbacks."""
+    """Intelligent cache for live team data with 365-day lookbacks."""
     
     def __init__(self, db_path: str = "./data/live_cache.db"):
         self.db_path = Path(db_path)
@@ -62,7 +62,7 @@ class LiveDataCache:
             
         logger.info(f"✅ Initialized live data cache: {self.db_path}")
     
-    async def get_team_data(self, team_name: str, days: int = 100) -> pd.DataFrame:
+    async def get_team_data(self, team_name: str, days: int = 365) -> pd.DataFrame:
         """Get comprehensive team data with live API calls if needed."""
         
         # Check cache first
@@ -146,7 +146,7 @@ class LiveDataCache:
         
         try:
             # Use our existing VLR.gg integration
-            all_matches = await fetch_map_matches_vlrgg(days=days, limit=500)
+            all_matches = await fetch_map_matches_vlrgg(days=days, limit=1000)
             
             if all_matches.empty:
                 return pd.DataFrame()
@@ -232,11 +232,11 @@ class LiveDataCache:
     async def get_prediction_data(self, teamA: str, teamB: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Get comprehensive data for both teams for prediction."""
         
-        logger.info(f"📡 Getting live data for {teamA} vs {teamB} (100-day lookback)")
+        logger.info(f"📡 Getting live data for {teamA} vs {teamB} (365-day lookback)")
         
         # Fetch data for both teams concurrently
-        teamA_task = self.get_team_data(teamA, days=100)
-        teamB_task = self.get_team_data(teamB, days=100)
+        teamA_task = self.get_team_data(teamA, days=365)
+        teamB_task = self.get_team_data(teamB, days=365)
         
         teamA_data, teamB_data = await asyncio.gather(teamA_task, teamB_task)
         

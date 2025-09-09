@@ -403,11 +403,11 @@ async def predict_map_live(
     teamB: str = Query(..., description="Name of team B"),
     map_name: str = Query(..., description="Name of the map")
 ):
-    """Make a prediction using live data cache with 100-day lookback.
+    """Make a prediction using live data cache with 365-day lookback.
     
     This endpoint:
     - Fetches fresh team data from VLR.gg API if cache is stale
-    - Uses 100-day historical window for comprehensive analysis
+    - Uses 365-day historical window for comprehensive analysis
     - Caches results locally for fast subsequent queries
     - Provides detailed data freshness information
     """
@@ -424,13 +424,28 @@ async def predict_map_live(
             "winner": prediction["winner"],
             "confidence": prediction["confidence"],
             "model_version": prediction["model_version"],
-            "uncertainty": prediction["uncertainty"],
-            "explanation": prediction["explanation"],
-            "features": prediction["features"],
-            "data_freshness": prediction["data_freshness"],
+            "uncertainty": prediction.get("uncertainty"),
+            "explanation": prediction.get("explanation"),
+            "features": prediction.get("features", {}),
+            "data_freshness": prediction.get("data_freshness", "unknown"),
             "cache_stats": prediction.get("cache_stats", {})
         }
         
     except Exception as e:
         logger.error(f"Live map prediction failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Live map prediction failed: {str(e)}")
+        # Graceful fallback to 50/50 to avoid frontend 500s
+        return {
+            "teamA": teamA,
+            "teamB": teamB,
+            "map_name": map_name,
+            "prob_teamA": 0.5,
+            "prob_teamB": 0.5,
+            "winner": teamA if teamA < teamB else teamB,
+            "confidence": 0.5,
+            "model_version": "live_realistic_v1.0",
+            "uncertainty": "High",
+            "explanation": f"Live map prediction failed: {str(e)}",
+            "features": {},
+            "data_freshness": "error",
+            "cache_stats": {}
+        }

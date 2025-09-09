@@ -23,22 +23,19 @@ from app.logging_utils import get_logger
 logger = get_logger(__name__)
 
 class LiveRealisticPredictor:
-    """Realistic predictor with live data cache and 100-day lookback."""
+    """Realistic predictor with live data cache and 365-day lookback."""
     
     def __init__(self, artifacts_dir: str = "./artifacts"):
         self.artifacts_dir = artifacts_dir
         self.model = None
+        # Align with realistic_model expected features (6 dims)
         self.feature_names = [
             'overall_winrate_diff',
             'map_winrate_diff', 
             'h2h_advantage',
-            'recent_form_5_diff',
-            'recent_form_10_diff',
+            'recent_form_diff',
             'experience_diff',
-            'rest_advantage',
-            'momentum_diff',
-            'tier_advantage',
-            'region_advantage'
+            'rest_advantage'
         ]
         self._load_model()
     
@@ -60,7 +57,7 @@ class LiveRealisticPredictor:
             logger.error(f"Failed to load live realistic model: {e}")
     
     async def predict(self, teamA: str, teamB: str, map_name: str) -> Dict:
-        """Make a prediction using live data cache with 100-day lookback."""
+        """Make a prediction using live data cache with 365-day lookback."""
         
         if self.model is None:
             return {
@@ -75,16 +72,26 @@ class LiveRealisticPredictor:
             }
         
         try:
-            # Get live data for both teams (100-day lookback)
+            # Get live data for both teams (365-day lookback)
             logger.info(f"🔍 Fetching live data: {teamA} vs {teamB}")
             
             teamA_data, teamB_data = await live_cache.get_prediction_data(teamA, teamB)
             
-            # Create features using live + cached data
+            # Create features using live + cached data (6-dim vector)
             features = self._create_live_features(teamA, teamB, map_name, teamA_data, teamB_data)
             
-            # Make prediction
-            prob_teamA = self.model.predict_proba([features])[0][1]
+            # Make prediction (base)
+            prob_teamA_base = self.model.predict_proba([features])[0][1]
+            prob_teamB_base = 1 - prob_teamA_base
+
+            # Slightly increase H2H influence via small blend
+            h2h_raw = float(features[2])  # in [-1, 1]
+            # Convert h2h advantage to a probability tilt around 0.5 with small weight
+            h2h_prob = 0.5 + 0.15 * (h2h_raw)  # weight = 0.15 (subtle)
+            h2h_prob = max(0.0, min(1.0, h2h_prob))
+
+            blend_alpha = 0.15  # 15% blend from H2H-derived prob
+            prob_teamA = (1 - blend_alpha) * prob_teamA_base + blend_alpha * h2h_prob
             prob_teamB = 1 - prob_teamA
             
             # Determine winner and confidence
@@ -114,15 +121,11 @@ class LiveRealisticPredictor:
                     "overall_winrate_diff": float(features[0]),
                     "map_winrate_diff": float(features[1]),
                     "h2h_advantage": float(features[2]),
-                    "recent_form_5_diff": float(features[3]),
-                    "recent_form_10_diff": float(features[4]),
-                    "experience_diff": float(features[5]),
-                    "rest_advantage": float(features[6]),
-                    "momentum_diff": float(features[7]),
-                    "tier_advantage": float(features[8]),
-                    "region_advantage": float(features[9])
+                    "recent_form_diff": float(features[3]),
+                    "experience_diff": float(features[4]),
+                    "rest_advantage": float(features[5])
                 },
-                "data_freshness": f"{len(teamA_data)}+{len(teamB_data)} matches (100d)",
+                "data_freshness": f"{len(teamA_data)}+{len(teamB_data)} matches (365d)",
                 "cache_stats": live_cache.get_cache_stats()
             }
             
@@ -141,9 +144,9 @@ class LiveRealisticPredictor:
     
     def _create_live_features(self, teamA: str, teamB: str, map_name: str, 
                              teamA_data: pd.DataFrame, teamB_data: pd.DataFrame) -> np.ndarray:
-        """Create features using live data with 100-day context."""
+        """Create features using live data with 365-day context (6 features)."""
         
-        # 1. Overall winrate difference (100-day window)
+        # 1. Overall winrate difference (365-day window)
         teamA_wins = len(teamA_data[teamA_data['result'] == 'win'])
         teamA_total = len(teamA_data)
         teamA_winrate = teamA_wins / max(teamA_total, 1)
@@ -178,19 +181,12 @@ class LiveRealisticPredictor:
         
         h2h_advantage = (teamA_h2h_wins - teamB_h2h_wins) / max(total_h2h, 1)
         
-        # 4. Recent form differences (5 and 10 games)
-        teamA_recent_5 = teamA_data.head(5)
+        # 4. Recent form difference (combine 5 and 10 game windows into one metric)
         teamA_recent_10 = teamA_data.head(10)
-        teamB_recent_5 = teamB_data.head(5)
         teamB_recent_10 = teamB_data.head(10)
-        
-        teamA_form_5 = len(teamA_recent_5[teamA_recent_5['result'] == 'win']) / max(len(teamA_recent_5), 1)
-        teamB_form_5 = len(teamB_recent_5[teamB_recent_5['result'] == 'win']) / max(len(teamB_recent_5), 1)
-        recent_form_5_diff = teamA_form_5 - teamB_form_5
-        
         teamA_form_10 = len(teamA_recent_10[teamA_recent_10['result'] == 'win']) / max(len(teamA_recent_10), 1)
         teamB_form_10 = len(teamB_recent_10[teamB_recent_10['result'] == 'win']) / max(len(teamB_recent_10), 1)
-        recent_form_10_diff = teamA_form_10 - teamB_form_10
+        recent_form_diff = teamA_form_10 - teamB_form_10
         
         # 5. Experience difference
         experience_diff = teamA_total - teamB_total
@@ -211,28 +207,13 @@ class LiveRealisticPredictor:
         
         rest_advantage = teamA_rest - teamB_rest
         
-        # 7. Momentum (current win streak)
-        teamA_momentum = self._calculate_momentum(teamA_data)
-        teamB_momentum = self._calculate_momentum(teamB_data)
-        momentum_diff = teamA_momentum - teamB_momentum
-        
-        # 8. Tier advantage (placeholder - could be enhanced)
-        tier_advantage = 0.0
-        
-        # 9. Region advantage (placeholder - could be enhanced)
-        region_advantage = 0.0
-        
         return np.array([
             overall_winrate_diff,
             map_winrate_diff,
             h2h_advantage,
-            recent_form_5_diff,
-            recent_form_10_diff,
+            recent_form_diff,
             experience_diff,
-            rest_advantage,
-            momentum_diff,
-            tier_advantage,
-            region_advantage
+            rest_advantage
         ])
     
     def _calculate_momentum(self, team_data: pd.DataFrame) -> float:
@@ -292,13 +273,12 @@ class LiveRealisticPredictor:
                           teamA_data: pd.DataFrame, teamB_data: pd.DataFrame) -> str:
         """Create explanation using live data context."""
         
-        # Get the most significant factors
+        # Get the most significant factors (aligned with 6-dim features)
         feature_impacts = [
             (abs(features[0]), "overall performance"),
             (abs(features[1]), f"performance on {map_name}"),
             (abs(features[2]), "head-to-head record"),
-            (abs(features[3]), "recent form (5 games)"),
-            (abs(features[7]), "current momentum")
+            (abs(features[3]), "recent form")
         ]
         
         # Sort by impact and get top 2
@@ -309,7 +289,7 @@ class LiveRealisticPredictor:
         explanation_parts = []
         
         if len(teamA_data) > 0 and len(teamB_data) > 0:
-            explanation_parts.append(f"Based on 100-day analysis ({len(teamA_data)}+{len(teamB_data)} matches)")
+            explanation_parts.append(f"Based on 365-day analysis ({len(teamA_data)}+{len(teamB_data)} matches)")
         else:
             explanation_parts.append("Based on limited available data")
         

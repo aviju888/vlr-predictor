@@ -28,7 +28,7 @@ export default function MapResultCard({
         </div>
         <div className="flex items-center gap-2">
           {result.uncertainty && <Badge variant="secondary">Uncertainty: {result.uncertainty}</Badge>}
-          <Badge variant="outline">Model: Calibrated</Badge>
+          <Badge variant="outline">Model: {result.model_version || "Calibrated"}</Badge>
         </div>
       </div>
 
@@ -37,7 +37,7 @@ export default function MapResultCard({
       {result.features && (
         <ul className="text-sm list-disc list-inside space-y-1">
           {Object.entries(result.features)
-            .filter(([k]) => ["winrate_diff", "h2h_shrunk", "sos_mapelo_diff"].includes(k))
+            .filter(([k]) => ["winrate_diff", "h2h_shrunk", "sos_mapelo_diff", "overall_winrate_diff", "map_winrate_diff", "h2h_advantage"].includes(k))
             .map(([k, v]) => (
               <li key={k}>
                 {k.replace(/_/g, " ")}: {typeof v === "number" ? (v as number).toFixed(3) : String(v)}

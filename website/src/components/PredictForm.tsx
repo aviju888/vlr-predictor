@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { predictMap, fetchTeams, MapPredictResponse, predictSeries, fetchModelInfo, SeriesPredictResponse } from "@/lib/api";
+import { predictMap, predictMapLive, fetchTeams, MapPredictResponse, predictSeries, fetchModelInfo, SeriesPredictResponse } from "@/lib/api";
 import MapResultCard from "@/components/MapResultCard";
 import SeriesResultCard from "@/components/SeriesResultCard";
 
@@ -16,7 +16,7 @@ export default function PredictForm() {
   const [teamA, setTeamA] = useState("");
   const [teamB, setTeamB] = useState("");
   const [mapName, setMapName] = useState<string | undefined>("Ascent");
-  const [model, setModel] = useState<"calibrated" | "elo">("calibrated");
+  const [model, setModel] = useState<"calibrated" | "elo" | "live">("calibrated");
   const [showSugA, setShowSugA] = useState(false);
   const [showSugB, setShowSugB] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ export default function PredictForm() {
     setSeriesResult(null);
     setPerMapRows(null);
     try {
-      const data = await predictMap({ teamA, teamB, map_name: mapName });
+      const data = await (model === "live" ? predictMapLive({ teamA, teamB, map_name: mapName }) : predictMap({ teamA, teamB, map_name: mapName }));
       setResult(data);
     } catch (e: any) {
       setError(e?.message || "Prediction failed");
@@ -54,7 +54,7 @@ export default function PredictForm() {
     try {
       const rows: { map: string; probA: number; probB: number }[] = [];
       for (const m of MAPS) {
-        const d = await predictMap({ teamA, teamB, map_name: m });
+        const d = await (model === "live" ? predictMapLive({ teamA, teamB, map_name: m }) : predictMap({ teamA, teamB, map_name: m }));
         rows.push({ map: m, probA: d.prob_teamA, probB: d.prob_teamB });
       }
       setPerMapRows(rows);
@@ -212,6 +212,7 @@ export default function PredictForm() {
             <SelectContent>
               <SelectItem value="calibrated">Calibrated (LR)</SelectItem>
               <SelectItem value="elo">Elo baseline</SelectItem>
+              <SelectItem value="live">Live (365d)</SelectItem>
             </SelectContent>
           </Select>
         </div>
