@@ -1,0 +1,37 @@
+{
+  "model_type": "masters_2025_tournament",
+  "training_data": {
+    "tournament": "VCT Masters Bangkok 2025",
+    "matches": 33,
+    "date_range": "2025-02-20 to 2025-03-02",
+    "teams": 8,
+    "maps": [
+      "Ascent",
+      "Bind",
+      "Breeze",
+      "Haven",
+      "Split"
+    ]
+  },
+  "validation_data": {
+    "tournament": "VCT Masters Toronto 2025",
+    "matches": 38,
+    "date_range": "2025-06-07 to 2025-06-22",
+    "teams": 13
+  },
+  "performance": {
+    "brier_score": 0.01132448611313356,
+    "log_loss": 0.04928505850863369,
+    "accuracy": 1.0,
+    "high_confidence_accuracy": 1.0
+  },
+  "features": [
+    "winrate_diff",
+    "h2h_shrunk",
+    "sos_mapelo_diff",
+    "acs_diff",
+    "kd_diff"
+  ],
+  "calibrator_type": "isotonic",
+  "created_at": "2025-09-08T22:28:22.108710"
+}

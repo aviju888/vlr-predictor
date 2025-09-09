@@ -7,13 +7,16 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 from app.logging_utils import get_logger
-from app.simple_predictor import simple_predictor
+from app.advanced_predictor import advanced_predictor
+from app.realistic_predictor import realistic_predictor
+from itertools import combinations
 
 # Add the project root to the path to import train_and_predict
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 try:
     from train_and_predict import load_data
+    from train_and_predict import CURRENT_MAP_POOL
 except ImportError as e:
     get_logger(__name__).warning(f"Could not import train_and_predict: {e}")
 
@@ -40,6 +43,19 @@ class MapPredictionResponse(BaseModel):
     explanation: str
     prediction_timestamp: datetime
     model_version: str = "advanced_v1.0"
+    uncertainty: Optional[str] = None
+
+class SeriesPredictionResponse(BaseModel):
+    """Response model for series (BO3) predictions."""
+    model_config = {"protected_namespaces": ()}
+
+    teamA: str
+    teamB: str
+    format: str = "BO3"
+    headline: dict
+    alternatives: list
+    generated_at: datetime
+    model_version: str = "advanced_v1.0"
 
 @router.post("/map-predict", response_model=MapPredictionResponse)
 async def predict_map_outcome(request: MapPredictionRequest):
@@ -48,8 +64,12 @@ async def predict_map_outcome(request: MapPredictionRequest):
         # Set the data source environment variable
         os.environ["DATA_CSV"] = "./data/map_matches_365d.csv"
         
-        # Make prediction using the simple model
-        result = simple_predictor.predict(request.teamA, request.teamB, request.map_name)
+        # Validate map is in current pool
+        if request.map_name not in CURRENT_MAP_POOL:
+            raise HTTPException(status_code=422, detail=f"Map '{request.map_name}' is not in the current pool")
+
+        # Make prediction using the calibrated advanced model
+        result = advanced_predictor.predict(request.teamA, request.teamB, request.map_name)
         
         return MapPredictionResponse(
             teamA=request.teamA,
@@ -61,7 +81,8 @@ async def predict_map_outcome(request: MapPredictionRequest):
             factor_contrib=result["factor_contrib"],
             explanation=result["explanation"],
             prediction_timestamp=datetime.now(),
-            model_version="advanced_v1.0"
+            model_version="advanced_v1.0",
+            uncertainty=result.get("uncertainty")
         )
         
     except Exception as e:
@@ -79,8 +100,12 @@ async def predict_map_outcome_get(
         # Set the data source environment variable
         os.environ["DATA_CSV"] = "./data/map_matches_365d.csv"
         
-        # Make prediction using the simple model
-        result = simple_predictor.predict(teamA, teamB, map_name)
+        # Validate map is in current pool
+        if map_name not in CURRENT_MAP_POOL:
+            raise HTTPException(status_code=422, detail=f"Map '{map_name}' is not in the current pool")
+
+        # Make prediction using the calibrated advanced model
+        result = advanced_predictor.predict(teamA, teamB, map_name)
         
         return MapPredictionResponse(
             teamA=teamA,
@@ -92,12 +117,86 @@ async def predict_map_outcome_get(
             factor_contrib=result["factor_contrib"],
             explanation=result["explanation"],
             prediction_timestamp=datetime.now(),
-            model_version="advanced_v1.0"
+            model_version="advanced_v1.0",
+            uncertainty=result.get("uncertainty")
         )
         
     except Exception as e:
         logger.error(f"Map prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Map prediction failed: {str(e)}")
+
+@router.get("/series-predict", response_model=SeriesPredictionResponse)
+async def predict_series_bo3(
+    teamA: str = Query(..., description="Name of team A"),
+    teamB: str = Query(..., description="Name of team B"),
+    topN: int = Query(3, ge=1, le=10, description="How many top combos to return"),
+    maps: Optional[str] = Query(None, description="Comma-separated maps to consider; defaults to current pool")
+):
+    """Predict best-of-3 series outcome by enumerating 3-map combinations.
+
+    Assumes independence across maps. Series win prob for teamA across maps m1,m2,m3 with
+    per-map probs p1,p2,p3 is: p1 p2 + p1 p3 + p2 p3 - 2 p1 p2 p3.
+    """
+    try:
+        os.environ["DATA_CSV"] = "./data/map_matches_365d.csv"
+
+        # Determine candidate maps
+        if maps:
+            candidate_maps = [m.strip() for m in maps.split(",") if m.strip()]
+            # Validate maps are in pool
+            invalid = [m for m in candidate_maps if m not in CURRENT_MAP_POOL]
+            if invalid:
+                raise HTTPException(status_code=422, detail=f"Invalid maps not in pool: {invalid}")
+        else:
+            candidate_maps = list(CURRENT_MAP_POOL)
+
+        # Need at least 3 maps
+        if len(candidate_maps) < 3:
+            raise HTTPException(status_code=422, detail="Need at least 3 maps to form a BO3")
+
+        def series_prob(p1: float, p2: float, p3: float) -> float:
+            return (p1 * p2 + p1 * p3 + p2 * p3) - 2.0 * (p1 * p2 * p3)
+
+        combos = []
+        for trio in combinations(candidate_maps, 3):
+            try:
+                p = []
+                for m in trio:
+                    res = advanced_predictor.predict(teamA, teamB, m)
+                    p.append(float(res.get("prob_teamA", 0.5)))
+                sp = series_prob(p[0], p[1], p[2])
+                combos.append({
+                    "maps": list(trio),
+                    "prob_teamA": sp,
+                    "prob_teamB": 1.0 - sp,
+                    "per_map": [{"map": trio[i], "prob_teamA": p[i], "prob_teamB": 1.0 - p[i]} for i in range(3)]
+                })
+            except Exception as ie:
+                # Skip problematic trio but continue
+                logger.warning(f"Failed trio {trio}: {ie}")
+                continue
+
+        if not combos:
+            raise HTTPException(status_code=500, detail="Failed to generate any series combos")
+
+        combos.sort(key=lambda x: x["prob_teamA"], reverse=True)
+        headline = combos[0]
+        alternatives = combos[1:1 + max(0, topN - 1)]
+
+        return SeriesPredictionResponse(
+            teamA=teamA,
+            teamB=teamB,
+            format="BO3",
+            headline=headline,
+            alternatives=alternatives,
+            generated_at=datetime.now(),
+            model_version="advanced_v1.0",
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Series prediction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Series prediction failed: {str(e)}")
 
 @router.post("/retrain")
 async def retrain_model():
@@ -137,8 +236,10 @@ async def get_model_info():
     try:
         # Check if model artifacts exist
         artifacts_dir = "./artifacts"
-        model_exists = os.path.exists(os.path.join(artifacts_dir, "model.joblib"))
-        calibrator_exists = os.path.exists(os.path.join(artifacts_dir, "calibrator.joblib"))
+        model_path = os.path.join(artifacts_dir, "model.joblib")
+        calibrator_path = os.path.join(artifacts_dir, "calibrator.joblib")
+        model_exists = os.path.exists(model_path)
+        calibrator_exists = os.path.exists(calibrator_path)
         
         # Get metrics if available
         metrics_file = os.path.join(artifacts_dir, "metrics.csv")
@@ -148,9 +249,21 @@ async def get_model_info():
             metrics_df = pd.read_csv(metrics_file)
             metrics = metrics_df.to_dict('records')
         
+        calibrator_kind = None
+        if calibrator_exists:
+            try:
+                import joblib
+                cal = joblib.load(calibrator_path)
+                calibrator_kind = getattr(cal, "kind", None)
+            except Exception:
+                calibrator_kind = None
+
         return {
             "model_loaded": model_exists and calibrator_exists,
             "model_version": "advanced_v1.0",
+            "calibrator_kind": calibrator_kind,
+            "model_timestamp": os.path.getmtime(model_path) if model_exists else None,
+            "calibrator_timestamp": os.path.getmtime(calibrator_path) if calibrator_exists else None,
             "features": [
                 "winrate_diff",
                 "h2h_shrunk", 
@@ -181,25 +294,24 @@ async def get_available_maps():
 async def get_available_teams():
     """Get list of teams available in the training data."""
     try:
+        # For now, return a static list of popular teams for frontend testing
+        # This avoids the timeout issues with VLR.gg data loading
+        popular_teams = [
+            "100 Thieves GC", "EMPIRE :3", "Alliance Guardians", "Blue Otter GC", 
+            "BOARS", "Burger Boyz", "Contra GC", "Corinthians Esports",
+            "DNSTY", "E-Xolos LAZER", "ENVY", "FEARX", "FULL SENSE",
+            "G2 Esports", "Sentinels", "Paper Rex", "LOUD", "NRG",
+            "Team Liquid", "Fnatic", "Cloud9", "T1", "DRX"
+        ]
+        
         # Check if we should use VLR.gg data
         use_vlrgg = os.getenv("USE_VLRGG", "false").lower() == "true"
         
         if use_vlrgg:
-            # Get teams from VLR.gg data
-            try:
-                import asyncio
-                from app.vlrgg_integration import fetch_map_matches_vlrgg
-                
-                # Fetch fresh data
-                df = asyncio.run(fetch_map_matches_vlrgg(days=30, limit=200))
-                if not df.empty:
-                    df["date"] = pd.to_datetime(df["date"])
-                    teams = sorted(set(df["teamA"].unique()) | set(df["teamB"].unique()))
-                else:
-                    teams = []
-            except Exception as e:
-                logger.warning(f"Failed to fetch VLR.gg teams: {e}")
-                teams = []
+            # For now, just return popular teams to avoid the long loading time
+            # TODO: Implement async team loading in the background
+            teams = popular_teams
+            logger.info("Using popular teams for faster loading (VLR.gg teams can be loaded asynchronously)")
         else:
             # Load data and get unique teams
             os.environ["DATA_CSV"] = "./data/map_matches_365d.csv"
@@ -213,4 +325,43 @@ async def get_available_teams():
         
     except Exception as e:
         logger.error(f"Failed to get available teams: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get available teams: {str(e)}")
+        # Fallback to popular teams
+        return {
+            "teams": [
+                "100 Thieves GC", "EMPIRE :3", "Alliance Guardians", "Blue Otter GC", 
+                "BOARS", "Burger Boyz", "Contra GC", "Corinthians Esports",
+                "DNSTY", "E-Xolos LAZER", "ENVY", "FEARX", "FULL SENSE",
+                "G2 Esports", "Sentinels", "Paper Rex", "LOUD", "NRG",
+                "Team Liquid", "Fnatic", "Cloud9", "T1", "DRX"
+            ],
+            "total_teams": 23
+        }
+
+@router.get("/realistic/map-predict")
+async def predict_map_realistic(
+    teamA: str = Query(..., description="Name of team A"),
+    teamB: str = Query(..., description="Name of team B"),
+    map_name: str = Query(..., description="Name of the map")
+):
+    """Make a realistic prediction using only historical features (no data leakage)."""
+    try:
+        # Use the realistic predictor
+        prediction = realistic_predictor.predict(teamA, teamB, map_name)
+        
+        return {
+            "teamA": teamA,
+            "teamB": teamB,
+            "map_name": map_name,
+            "prob_teamA": prediction["prob_teamA"],
+            "prob_teamB": prediction["prob_teamB"],
+            "winner": prediction["winner"],
+            "confidence": prediction["confidence"],
+            "model_version": prediction["model_version"],
+            "uncertainty": prediction["uncertainty"],
+            "explanation": prediction["explanation"],
+            "features": prediction["features"]
+        }
+        
+    except Exception as e:
+        logger.error(f"Realistic map prediction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Realistic map prediction failed: {str(e)}")

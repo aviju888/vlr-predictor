@@ -1,0 +1,15 @@
+{
+  "saved_at": "2025-09-09T04:43:10.247644+00:00",
+  "calibrator": "platt",
+  "features": [
+    "winrate_diff",
+    "h2h_shrunk",
+    "sos_mapelo_diff",
+    "acs_diff",
+    "kd_diff"
+  ],
+  "split": {
+    "train_max_date": "2025-02-15 00:00:00",
+    "valid_min_date": "2025-02-20 00:00:00"
+  }
+}
