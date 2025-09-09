@@ -1,0 +1,242 @@
+{
+  "G2 Esports": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "G2 Esports"
+  },
+  "Sentinels": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "Sentinels"
+  },
+  "MIBR": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "MIBR"
+  },
+  "NRG Esports": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "NRG Esports"
+  },
+  "Evil Geniuses": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "Evil Geniuses"
+  },
+  "LOUD": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "LOUD"
+  },
+  "100 Thieves": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "100 Thieves"
+  },
+  "Cloud9": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "Cloud9"
+  },
+  "KR\u00dc Esports": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "KR\u00dc Esports"
+  },
+  "Leviat\u00e1n": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "Leviat\u00e1n"
+  },
+  "FURIA Esports": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "FURIA Esports"
+  },
+  "2Game Esports": {
+    "region": "americas",
+    "tier": "tier_1_franchised",
+    "official_name": "2Game Esports"
+  },
+  "Fnatic": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Fnatic"
+  },
+  "Team Liquid": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Team Liquid"
+  },
+  "Team Heretics": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Team Heretics"
+  },
+  "Team Vitality": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Team Vitality"
+  },
+  "Natus Vincere": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Natus Vincere"
+  },
+  "Karmine Corp": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Karmine Corp"
+  },
+  "BBL Esports": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "BBL Esports"
+  },
+  "FUT Esports": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "FUT Esports"
+  },
+  "Apeks": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Apeks"
+  },
+  "Gentle Mates": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Gentle Mates"
+  },
+  "Movistar KOI": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Movistar KOI"
+  },
+  "Giants Gaming": {
+    "region": "emea",
+    "tier": "tier_1_franchised",
+    "official_name": "Giants Gaming"
+  },
+  "Paper Rex": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Paper Rex"
+  },
+  "T1": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "T1"
+  },
+  "Rex Regum Qeon": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Rex Regum Qeon"
+  },
+  "DRX": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "DRX"
+  },
+  "Gen.G Esports": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Gen.G Esports"
+  },
+  "ZETA DIVISION": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "ZETA DIVISION"
+  },
+  "Talon Esports": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Talon Esports"
+  },
+  "DetonatioN FocusMe": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "DetonatioN FocusMe"
+  },
+  "Global Esports": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Global Esports"
+  },
+  "Bleed Esports": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Bleed Esports"
+  },
+  "Nongshim RedForce": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Nongshim RedForce"
+  },
+  "Team Secret": {
+    "region": "pacific",
+    "tier": "tier_1_franchised",
+    "official_name": "Team Secret"
+  },
+  "Edward Gaming": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "Edward Gaming"
+  },
+  "Bilibili Gaming": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "Bilibili Gaming"
+  },
+  "Xi Lai Gaming": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "Xi Lai Gaming"
+  },
+  "Wolves Esports": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "Wolves Esports"
+  },
+  "FunPlus Phoenix": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "FunPlus Phoenix"
+  },
+  "JD Gaming": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "JD Gaming"
+  },
+  "Titan Esports Club": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "Titan Esports Club"
+  },
+  "Dragon Ranger Gaming": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "Dragon Ranger Gaming"
+  },
+  "Nova Esports": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "Nova Esports"
+  },
+  "All Gamers": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "All Gamers"
+  },
+  "TYLOO": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "TYLOO"
+  },
+  "NOVA": {
+    "region": "china",
+    "tier": "tier_1_franchised",
+    "official_name": "NOVA"
+  }
+}
