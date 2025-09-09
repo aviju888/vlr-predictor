@@ -214,7 +214,7 @@ class RealisticPredictor:
         features = self._create_historical_features(teamA, teamB, map_name, match_date)
         
         # Make prediction
-        prob_teamA = self.model.predict_proba([features])[0][1]
+        prob_teamA = self.model.predict_proba([features])[0][0]  # Fixed: use [0][0] for teamA
         prob_teamB = 1 - prob_teamA
         
         # Determine winner and confidence

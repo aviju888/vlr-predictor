@@ -9,6 +9,8 @@ from datetime import datetime
 from app.logging_utils import get_logger
 from app.advanced_predictor import advanced_predictor
 from app.realistic_predictor import realistic_predictor
+from app.symmetric_predictor import symmetric_realistic_predictor
+from app.live_realistic_predictor import live_realistic_predictor
 from itertools import combinations
 
 # Add the project root to the path to import train_and_predict
@@ -297,26 +299,37 @@ async def get_available_teams():
         # For now, return a static list of popular teams for frontend testing
         # This avoids the timeout issues with VLR.gg data loading
         popular_teams = [
-            "100 Thieves GC", "EMPIRE :3", "Alliance Guardians", "Blue Otter GC", 
-            "BOARS", "Burger Boyz", "Contra GC", "Corinthians Esports",
-            "DNSTY", "E-Xolos LAZER", "ENVY", "FEARX", "FULL SENSE",
-            "G2 Esports", "Sentinels", "Paper Rex", "LOUD", "NRG",
-            "Team Liquid", "Fnatic", "Cloud9", "T1", "DRX"
+            # VCT Americas (11 teams)
+            "G2 Esports", "Sentinels", "MIBR", "NRG Esports", "LOUD", 
+            "100 Thieves", "Cloud9", "KRÜ Esports", "Leviatán", 
+            "FURIA Esports", "Evil Geniuses",
+            
+            # VCT EMEA (11 teams)
+            "Team Vitality", "Team Liquid", "Fnatic", "Team Heretics", 
+            "GIANTX", "Karmine Corp", "BBL Esports", "FUT Esports", 
+            "Natus Vincere", "Gentle Mates", "Movistar KOI",
+            
+            # VCT Pacific (11 teams)
+            "DRX", "T1", "Rex Regum Qeon", "Gen.G", "Paper Rex", 
+            "ZETA DIVISION", "Talon Esports", "DetonatioN FocusMe", 
+            "Global Esports", "Bleed Esports", "Team Secret",
+            
+            # VCT China (9 teams - some with actual data)
+            "Edward Gaming", "Trace Esports", "Xi Lai Gaming", 
+            "Bilibili Gaming", "Dragon Ranger Gaming", "FunPlus Phoenix", 
+            "Wolves Esports", "JDG Esports", "Titan Esports Club",
+            
+            # Teams with historical data
+            "100 Thieves GC", "BOARS", "DNSTY", "FULL SENSE", "EMPIRE :3",
+            "Alliance Guardians", "Blue Otter GC", "Contra GC"
         ]
         
         # Check if we should use VLR.gg data
         use_vlrgg = os.getenv("USE_VLRGG", "false").lower() == "true"
         
-        if use_vlrgg:
-            # For now, just return popular teams to avoid the long loading time
-            # TODO: Implement async team loading in the background
-            teams = popular_teams
-            logger.info("Using popular teams for faster loading (VLR.gg teams can be loaded asynchronously)")
-        else:
-            # Load data and get unique teams
-            os.environ["DATA_CSV"] = "./data/map_matches_365d.csv"
-            df = load_data()
-            teams = sorted(list(set(df['teamA'].unique()) | set(df['teamB'].unique())))
+        # Always use VCT teams for now (force override)
+        teams = popular_teams
+        logger.info(f"Using VCT franchised teams: {len(teams)} teams loaded")
         
         return {
             "teams": teams,
@@ -328,13 +341,31 @@ async def get_available_teams():
         # Fallback to popular teams
         return {
             "teams": [
-                "100 Thieves GC", "EMPIRE :3", "Alliance Guardians", "Blue Otter GC", 
-                "BOARS", "Burger Boyz", "Contra GC", "Corinthians Esports",
-                "DNSTY", "E-Xolos LAZER", "ENVY", "FEARX", "FULL SENSE",
-                "G2 Esports", "Sentinels", "Paper Rex", "LOUD", "NRG",
-                "Team Liquid", "Fnatic", "Cloud9", "T1", "DRX"
+                # VCT Americas
+                "G2 Esports", "Sentinels", "MIBR", "NRG Esports", "LOUD", 
+                "100 Thieves", "Cloud9", "KRÜ Esports", "Leviatán", 
+                "FURIA Esports", "Evil Geniuses",
+                
+                # VCT EMEA
+                "Team Vitality", "Team Liquid", "Fnatic", "Team Heretics", 
+                "GIANTX", "Karmine Corp", "BBL Esports", "FUT Esports", 
+                "Natus Vincere", "Gentle Mates", "Movistar KOI",
+                
+                # VCT Pacific
+                "DRX", "T1", "Rex Regum Qeon", "Gen.G", "Paper Rex", 
+                "ZETA DIVISION", "Talon Esports", "DetonatioN FocusMe", 
+                "Global Esports", "Bleed Esports", "Team Secret",
+                
+                # VCT China
+                "Edward Gaming", "Trace Esports", "Xi Lai Gaming", 
+                "Bilibili Gaming", "Dragon Ranger Gaming", "FunPlus Phoenix", 
+                "Wolves Esports", "JDG Esports", "Titan Esports Club",
+                
+                # Teams with historical data
+                "100 Thieves GC", "BOARS", "DNSTY", "FULL SENSE", "EMPIRE :3",
+                "Alliance Guardians", "Blue Otter GC", "Contra GC"
             ],
-            "total_teams": 23
+            "total_teams": 45
         }
 
 @router.get("/realistic/map-predict")
@@ -346,7 +377,7 @@ async def predict_map_realistic(
     """Make a realistic prediction using only historical features (no data leakage)."""
     try:
         # Use the realistic predictor
-        prediction = realistic_predictor.predict(teamA, teamB, map_name)
+        prediction = symmetric_realistic_predictor.predict(teamA, teamB, map_name)
         
         return {
             "teamA": teamA,
@@ -365,3 +396,41 @@ async def predict_map_realistic(
     except Exception as e:
         logger.error(f"Realistic map prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Realistic map prediction failed: {str(e)}")
+
+@router.get("/live/map-predict")
+async def predict_map_live(
+    teamA: str = Query(..., description="Name of team A"),
+    teamB: str = Query(..., description="Name of team B"),
+    map_name: str = Query(..., description="Name of the map")
+):
+    """Make a prediction using live data cache with 100-day lookback.
+    
+    This endpoint:
+    - Fetches fresh team data from VLR.gg API if cache is stale
+    - Uses 100-day historical window for comprehensive analysis
+    - Caches results locally for fast subsequent queries
+    - Provides detailed data freshness information
+    """
+    try:
+        # Use the live realistic predictor
+        prediction = await live_realistic_predictor.predict(teamA, teamB, map_name)
+        
+        return {
+            "teamA": teamA,
+            "teamB": teamB,
+            "map_name": map_name,
+            "prob_teamA": prediction["prob_teamA"],
+            "prob_teamB": prediction["prob_teamB"],
+            "winner": prediction["winner"],
+            "confidence": prediction["confidence"],
+            "model_version": prediction["model_version"],
+            "uncertainty": prediction["uncertainty"],
+            "explanation": prediction["explanation"],
+            "features": prediction["features"],
+            "data_freshness": prediction["data_freshness"],
+            "cache_stats": prediction.get("cache_stats", {})
+        }
+        
+    except Exception as e:
+        logger.error(f"Live map prediction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Live map prediction failed: {str(e)}")
