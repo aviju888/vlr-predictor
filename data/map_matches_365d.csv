@@ -1,0 +1,107 @@
+date,teamA,teamB,winner,map_name,region,tier,teamA_players,teamB_players,teamA_ACS,teamB_ACS,teamA_KD,teamB_KD
+2024-01-15,Sentinels,Paper Rex,Sentinels,Split,Americas,1,"tenz,zellsis,zekken,marved,valyn","jinggg,monyet,f0rsakeN,Benkai,d4v41",228.4,231.9,1.01,0.98
+2024-01-20,LOUD,NRG,NRG,Haven,Americas,1,"aspas,less,sacy,tuyz,cauanzin","crashies,Victor,FNS,ardiis,ethan",245.2,238.7,1.15,1.08
+2024-01-25,Paper Rex,LOUD,LOUD,Ascent,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",242.1,240.3,1.12,1.09
+2024-02-01,NRG,Sentinels,Sentinels,Bind,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.8,232.1,1.05,1.02
+2024-02-05,LOUD,Paper Rex,Paper Rex,Lotus,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",248.9,241.2,1.18,1.11
+2024-02-10,Sentinels,NRG,NRG,Split,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",229.7,234.5,1.03,1.06
+2024-02-15,Paper Rex,LOUD,LOUD,Haven,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.6,239.8,1.14,1.10
+2024-02-20,NRG,Sentinels,Sentinels,Ascent,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",237.2,230.8,1.08,1.01
+2024-02-25,LOUD,Paper Rex,Paper Rex,Bind,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",246.1,242.3,1.16,1.13
+2024-03-01,Sentinels,NRG,NRG,Lotus,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.4,233.9,1.04,1.05
+2024-03-05,Paper Rex,LOUD,LOUD,Split,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.7,240.1,1.13,1.09
+2024-03-10,NRG,Sentinels,Sentinels,Haven,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",238.6,229.2,1.09,1.00
+2024-03-15,LOUD,Paper Rex,Paper Rex,Ascent,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.3,241.8,1.17,1.12
+2024-03-20,Sentinels,NRG,NRG,Bind,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.9,235.4,1.05,1.07
+2024-03-25,Paper Rex,LOUD,LOUD,Lotus,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",245.8,239.5,1.14,1.08
+2024-04-01,NRG,Sentinels,Sentinels,Split,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.7,231.6,1.08,1.02
+2024-04-05,LOUD,Paper Rex,Paper Rex,Haven,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",249.1,242.7,1.19,1.13
+2024-04-10,Sentinels,NRG,NRG,Ascent,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",230.3,234.8,1.02,1.06
+2024-04-15,Paper Rex,LOUD,LOUD,Bind,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.2,240.9,1.12,1.11
+2024-04-20,NRG,Sentinels,Sentinels,Lotus,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",237.5,230.1,1.09,1.01
+2024-04-25,LOUD,Paper Rex,Paper Rex,Split,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",248.4,241.6,1.18,1.10
+2024-05-01,Sentinels,NRG,NRG,Haven,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.8,233.2,1.03,1.04
+2024-05-05,Paper Rex,LOUD,LOUD,Ascent,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.5,239.7,1.13,1.09
+2024-05-10,NRG,Sentinels,Sentinels,Bind,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.9,232.4,1.07,1.03
+2024-05-15,LOUD,Paper Rex,Paper Rex,Lotus,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",246.8,242.1,1.16,1.12
+2024-05-20,Sentinels,NRG,NRG,Split,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",229.6,234.7,1.01,1.05
+2024-05-25,Paper Rex,LOUD,LOUD,Haven,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.9,240.4,1.14,1.10
+2024-06-01,NRG,Sentinels,Sentinels,Ascent,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",238.1,231.3,1.08,1.02
+2024-06-05,LOUD,Paper Rex,Paper Rex,Bind,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.6,241.9,1.17,1.11
+2024-06-10,Sentinels,NRG,NRG,Lotus,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.2,235.8,1.04,1.06
+2024-06-15,Paper Rex,LOUD,LOUD,Split,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",245.1,240.6,1.13,1.09
+2024-06-20,NRG,Sentinels,Sentinels,Haven,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.4,230.9,1.07,1.01
+2024-06-25,LOUD,Paper Rex,Paper Rex,Ascent,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",248.7,242.3,1.18,1.12
+2024-07-01,Sentinels,NRG,NRG,Bind,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",230.7,234.1,1.02,1.04
+2024-07-05,Paper Rex,LOUD,LOUD,Lotus,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.3,239.8,1.12,1.08
+2024-07-10,NRG,Sentinels,Sentinels,Split,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",237.8,231.5,1.09,1.02
+2024-07-15,LOUD,Paper Rex,Paper Rex,Haven,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",249.3,241.5,1.19,1.10
+2024-07-20,Sentinels,NRG,NRG,Ascent,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.1,233.6,1.03,1.05
+2024-07-25,Paper Rex,LOUD,LOUD,Bind,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.6,240.2,1.13,1.09
+2024-08-01,NRG,Sentinels,Sentinels,Lotus,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.2,232.7,1.06,1.03
+2024-08-05,LOUD,Paper Rex,Paper Rex,Split,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.9,242.8,1.16,1.13
+2024-08-10,Sentinels,NRG,NRG,Haven,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",229.4,234.9,1.01,1.06
+2024-08-15,Paper Rex,LOUD,LOUD,Ascent,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.8,239.3,1.14,1.08
+2024-08-20,NRG,Sentinels,Sentinels,Bind,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.1,231.8,1.08,1.02
+2024-08-25,LOUD,Paper Rex,Paper Rex,Lotus,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",248.2,241.7,1.17,1.11
+2024-09-01,Sentinels,NRG,NRG,Split,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.5,235.3,1.05,1.07
+2024-09-05,Paper Rex,LOUD,LOUD,Haven,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",245.4,240.0,1.13,1.09
+2024-09-10,NRG,Sentinels,Sentinels,Ascent,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",237.3,230.6,1.09,1.01
+2024-09-15,LOUD,Paper Rex,Paper Rex,Bind,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",246.5,242.4,1.15,1.12
+2024-09-20,Sentinels,NRG,NRG,Lotus,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",230.9,234.2,1.03,1.05
+2024-09-25,Paper Rex,LOUD,LOUD,Split,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.1,240.7,1.12,1.10
+2024-10-01,NRG,Sentinels,Sentinels,Haven,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.7,232.0,1.07,1.03
+2024-10-05,LOUD,Paper Rex,Paper Rex,Ascent,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.1,241.8,1.16,1.11
+2024-10-10,Sentinels,NRG,NRG,Bind,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.6,233.8,1.04,1.06
+2024-10-15,Paper Rex,LOUD,LOUD,Lotus,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.6,239.5,1.13,1.08
+2024-10-20,NRG,Sentinels,Sentinels,Split,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.8,231.2,1.08,1.02
+2024-10-25,LOUD,Paper Rex,Paper Rex,Haven,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",248.9,242.1,1.18,1.10
+2024-11-01,Sentinels,NRG,NRG,Ascent,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",229.8,234.5,1.02,1.05
+2024-11-05,Paper Rex,LOUD,LOUD,Bind,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.7,240.3,1.12,1.09
+2024-11-10,NRG,Sentinels,Sentinels,Lotus,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",237.4,230.7,1.09,1.01
+2024-11-15,LOUD,Paper Rex,Paper Rex,Split,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",246.2,241.9,1.15,1.12
+2024-11-20,Sentinels,NRG,NRG,Haven,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.1,235.6,1.05,1.07
+2024-11-25,Paper Rex,LOUD,LOUD,Ascent,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.9,239.6,1.14,1.08
+2024-12-01,NRG,Sentinels,Sentinels,Bind,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.5,232.3,1.06,1.04
+2024-12-05,LOUD,Paper Rex,Paper Rex,Lotus,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.8,242.5,1.17,1.13
+2024-12-10,Sentinels,NRG,NRG,Split,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",230.4,234.1,1.03,1.05
+2024-12-15,Paper Rex,LOUD,LOUD,Haven,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.3,240.8,1.11,1.10
+2024-12-20,NRG,Sentinels,Sentinels,Ascent,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.7,231.5,1.08,1.02
+2024-12-25,LOUD,Paper Rex,Paper Rex,Bind,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",248.4,241.2,1.18,1.09
+2024-12-30,Sentinels,NRG,NRG,Lotus,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.2,234.6,1.03,1.05
+2025-01-05,Paper Rex,LOUD,LOUD,Split,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.1,240.3,1.12,1.09
+2025-01-10,NRG,Sentinels,Sentinels,Haven,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",237.9,231.4,1.08,1.02
+2025-01-15,LOUD,Paper Rex,Paper Rex,Ascent,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.5,241.7,1.16,1.11
+2025-01-20,Sentinels,NRG,NRG,Bind,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.8,235.1,1.05,1.06
+2025-01-25,Paper Rex,LOUD,LOUD,Lotus,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.8,239.9,1.13,1.08
+2025-01-30,NRG,Sentinels,Sentinels,Split,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.3,231.7,1.07,1.02
+2025-02-05,LOUD,Paper Rex,Paper Rex,Haven,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",248.1,242.0,1.17,1.10
+2025-02-10,Sentinels,NRG,NRG,Ascent,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",230.5,234.3,1.02,1.05
+2025-02-15,Paper Rex,LOUD,LOUD,Bind,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.7,240.5,1.12,1.09
+2025-02-20,NRG,Sentinels,Sentinels,Lotus,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.6,232.2,1.06,1.03
+2025-02-25,LOUD,Paper Rex,Paper Rex,Split,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.2,241.4,1.15,1.09
+2025-03-01,Sentinels,NRG,NRG,Haven,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.7,233.8,1.03,1.04
+2025-03-05,Paper Rex,LOUD,LOUD,Ascent,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.0,239.6,1.11,1.08
+2025-03-10,NRG,Sentinels,Sentinels,Bind,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",237.1,231.9,1.08,1.02
+2025-03-15,LOUD,Paper Rex,Paper Rex,Lotus,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",246.9,242.2,1.16,1.11
+2025-03-20,Sentinels,NRG,NRG,Split,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.4,235.0,1.04,1.06
+2025-03-25,Paper Rex,LOUD,LOUD,Haven,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.5,240.1,1.12,1.09
+2025-03-30,NRG,Sentinels,Sentinels,Ascent,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.0,231.6,1.07,1.01
+2025-04-05,LOUD,Paper Rex,Paper Rex,Bind,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.8,241.6,1.17,1.10
+2025-04-10,Sentinels,NRG,NRG,Lotus,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",230.8,234.4,1.02,1.05
+2025-04-15,Paper Rex,LOUD,LOUD,Split,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.3,239.7,1.11,1.08
+2025-04-20,NRG,Sentinels,Sentinels,Haven,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.3,232.5,1.05,1.03
+2025-04-25,LOUD,Paper Rex,Paper Rex,Ascent,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",246.6,241.8,1.15,1.10
+2025-04-30,Sentinels,NRG,NRG,Bind,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.9,233.7,1.03,1.04
+2025-05-05,Paper Rex,LOUD,LOUD,Lotus,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.2,240.0,1.10,1.07
+2025-05-10,NRG,Sentinels,Sentinels,Split,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.7,231.8,1.08,1.02
+2025-05-15,LOUD,Paper Rex,Paper Rex,Haven,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.4,241.3,1.16,1.09
+2025-05-20,Sentinels,NRG,NRG,Ascent,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.1,234.9,1.04,1.06
+2025-05-25,Paper Rex,LOUD,LOUD,Bind,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",244.6,240.2,1.12,1.08
+2025-05-30,NRG,Sentinels,Sentinels,Lotus,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",235.8,232.0,1.06,1.03
+2025-06-05,LOUD,Paper Rex,Paper Rex,Split,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",247.0,241.5,1.15,1.09
+2025-06-10,Sentinels,NRG,NRG,Haven,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",231.3,234.1,1.02,1.05
+2025-06-15,Paper Rex,LOUD,LOUD,Ascent,APAC,1,"jinggg,monyet,f0rsakeN,Benkai,d4v41","aspas,less,sacy,tuyz,cauanzin",243.9,239.8,1.11,1.08
+2025-06-20,NRG,Sentinels,Sentinels,Bind,Americas,1,"crashies,Victor,FNS,ardiis,ethan","tenz,zellsis,zekken,marved,valyn",236.2,231.4,1.07,1.01
+2025-06-25,LOUD,Paper Rex,Paper Rex,Lotus,Americas,1,"aspas,less,sacy,tuyz,cauanzin","jinggg,monyet,f0rsakeN,Benkai,d4v41",246.3,241.7,1.14,1.10
+2025-06-30,Sentinels,NRG,NRG,Split,Americas,1,"tenz,zellsis,zekken,marved,valyn","crashies,Victor,FNS,ardiis,ethan",232.6,235.2,1.05,1.07
