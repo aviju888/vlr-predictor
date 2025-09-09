@@ -66,7 +66,10 @@ def test_api_with_vlrgg():
             ("EMPIRE :3", "Tenax GC", "Ascent"),
             ("Blue Otter GC", "YDZ Black", "Split"),
             ("100 Thieves GC", "MIBR GC", "Haven"),
-            ("Alliance Guardians", "Burger Boyz", "Bind")
+            ("Alliance Guardians", "Burger Boyz", "Bind"),
+            {"Sentinels", "Paper Rex", "Split"},
+            {"Sentinels", "G2 Esports", "Split"},
+            {"Fnatic", "Paper Rex", "Bind"}
         ]
         
         for teamA, teamB, map_name in test_cases:

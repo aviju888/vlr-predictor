@@ -170,8 +170,34 @@ def load_data() -> pd.DataFrame:
     # Filter current map pool
     df = df[df["map_name"].isin(CURRENT_MAP_POOL)].copy()
 
-    # Keep T1 & T2; you can restrict to T1 here if needed
-    df = df[df["tier"].isin([1,2])].copy()
+    # Keep T1 & T2; allow restricting to T1 via env
+    only_t1 = os.getenv("ONLY_TIER1", "false").lower() == "true"
+    if only_t1:
+        df = df[df["tier"] == 1].copy()
+    else:
+        df = df[df["tier"].isin([1,2])].copy()
+
+    # Optional: filter to top N teams per region by appearances (both teamA and teamB)
+    if os.getenv("FILTER_TOP_TEAMS", "false").lower() == "true":
+        try:
+            top_n = int(os.getenv("TOP_TEAMS_PER_REGION", "100"))
+        except Exception:
+            top_n = 100
+
+        # Count appearances per team within each region
+        # Build long form of team-region
+        a = df[["teamA", "region"]].rename(columns={"teamA": "team"})
+        b = df[["teamB", "region"]].rename(columns={"teamB": "team"})
+        teams = pd.concat([a, b], ignore_index=True)
+        counts = teams.groupby(["region", "team"]).size().reset_index(name="n")
+
+        # Select top N per region
+        counts["rank"] = counts.groupby("region")["n"].rank(method="first", ascending=False)
+        allowed = counts[counts["rank"] <= top_n][["region", "team"]]
+        allowed_set = set((r.region, r.team) for r in allowed.itertuples(index=False))
+        mask = df.apply(lambda r: (r.region, r.teamA) in allowed_set and (r.region, r.teamB) in allowed_set, axis=1)
+        df = df[mask].copy()
+
     return df.sort_values("date").reset_index(drop=True)
 
 # -----------------------------
@@ -454,6 +480,22 @@ def train_and_calibrate(df: pd.DataFrame):
     dump(cal,   os.path.join(ARTIFACT_DIR, "calibrator.joblib"))
     # Also save column order for inference
     dump(X_cols, os.path.join(ARTIFACT_DIR, "xcols.joblib"))
+    # Save model info JSON
+    try:
+        import json
+        model_info = {
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+            "calibrator": cal.kind,
+            "features": X_cols,
+            "split": {
+                "train_max_date": str(feat[train_mask]["date"].max()),
+                "valid_min_date": str(feat[~train_mask]["date"].min())
+            }
+        }
+        with open(os.path.join(ARTIFACT_DIR, "MODEL_INFO.json"), "w") as f:
+            json.dump(model_info, f, indent=2)
+    except Exception as e:
+        print(f"[warn] Could not save MODEL_INFO.json: {e}")
     print("[ok] Saved model + calibrator artifacts.")
 
 # -----------------------------
