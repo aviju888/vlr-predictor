@@ -254,8 +254,131 @@ class RealisticPredictor:
                 "recent_form_diff": float(features[3]),
                 "experience_diff": float(features[4]),
                 "rest_advantage": float(features[5])
-            }
+            },
+            "_raw_features": features  # For SHAP explanation
         }
+
+    def explain(self, teamA: str, teamB: str, map_name: str) -> Dict:
+        """Generate SHAP explanations for a prediction."""
+        try:
+            import shap
+        except ImportError:
+            return {"error": "SHAP not installed. Run: pip install shap"}
+
+        if self.model is None:
+            return {"error": "Model not loaded"}
+
+        # Get prediction with features
+        prediction = self.predict(teamA, teamB, map_name)
+        features = prediction.get("_raw_features")
+
+        if features is None:
+            return {"error": "Could not extract features for explanation"}
+
+        # Create SHAP explainer for linear model
+        # For logistic regression, use LinearExplainer
+        try:
+            # Create a background dataset from historical data
+            if self.df_hist is not None and not self.df_hist.empty:
+                # Sample background data for SHAP
+                sample_size = min(100, len(self.df_hist))
+                background_features = []
+                sample_teams = self.df_hist['teamA'].unique()[:20]  # Sample teams
+
+                for i, row in self.df_hist.head(sample_size).iterrows():
+                    try:
+                        bg_features = self._create_historical_features(
+                            row['teamA'], row['teamB'],
+                            row.get('map_name', 'Ascent'),
+                            row['date']
+                        )
+                        background_features.append(bg_features)
+                    except:
+                        continue
+
+                if len(background_features) > 0:
+                    background = np.array(background_features)
+                else:
+                    # Fallback: use zeros as background
+                    background = np.zeros((10, 6))
+            else:
+                background = np.zeros((10, 6))
+
+            # Use KernelExplainer for any model type (most compatible)
+            explainer = shap.KernelExplainer(
+                lambda x: self.model.predict_proba(x)[:, 1],
+                background
+            )
+
+            # Calculate SHAP values for this prediction
+            shap_values = explainer.shap_values(features.reshape(1, -1))
+
+            # Map SHAP values to feature names with human-readable descriptions
+            feature_descriptions = {
+                'overall_winrate_diff': 'Overall Win Rate',
+                'map_winrate_diff': 'Map-Specific Win Rate',
+                'h2h_advantage': 'Head-to-Head Record',
+                'recent_form_diff': 'Recent Form (Last 3)',
+                'experience_diff': 'Match Experience',
+                'rest_advantage': 'Rest Advantage'
+            }
+
+            shap_explanation = []
+            for i, (name, value) in enumerate(zip(self.feature_names, shap_values[0])):
+                impact = "favors" if value > 0 else "against"
+                team_affected = teamA if value > 0 else teamB
+                abs_value = abs(value)
+
+                # Determine impact level
+                if abs_value > 0.15:
+                    strength = "strongly"
+                elif abs_value > 0.05:
+                    strength = "moderately"
+                else:
+                    strength = "slightly"
+
+                shap_explanation.append({
+                    "feature": name,
+                    "display_name": feature_descriptions.get(name, name),
+                    "shap_value": float(value),
+                    "feature_value": float(features[i]),
+                    "impact": impact,
+                    "team_affected": team_affected,
+                    "strength": strength,
+                    "description": f"{feature_descriptions.get(name, name)} {strength} {impact} {team_affected}"
+                })
+
+            # Sort by absolute SHAP value (most important first)
+            shap_explanation.sort(key=lambda x: abs(x['shap_value']), reverse=True)
+
+            # Generate human-readable summary
+            top_factors = shap_explanation[:3]
+            summary_parts = [f["description"] for f in top_factors if abs(f["shap_value"]) > 0.01]
+            summary = ". ".join(summary_parts) if summary_parts else "No dominant factors identified."
+
+            return {
+                "teamA": teamA,
+                "teamB": teamB,
+                "map_name": map_name,
+                "prediction": {
+                    "winner": prediction["winner"],
+                    "confidence": prediction["confidence"],
+                    "prob_teamA": prediction["prob_teamA"],
+                    "prob_teamB": prediction["prob_teamB"]
+                },
+                "explanation": {
+                    "summary": summary,
+                    "factors": shap_explanation,
+                    "base_probability": float(explainer.expected_value) if hasattr(explainer, 'expected_value') else 0.5
+                }
+            }
+
+        except Exception as e:
+            return {
+                "error": f"SHAP explanation failed: {str(e)}",
+                "prediction": prediction
+            }
+
 
 # Global instance
 realistic_predictor = RealisticPredictor()

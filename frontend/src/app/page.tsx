@@ -1,31 +1,16 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import PredictForm from "@/components/PredictForm";
 
 export default function Page() {
   return (
     <main className="mx-auto max-w-4xl p-6 space-y-8">
-      {/* Header with Navigation */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">VLR Predictor</h1>
-          <p className="text-muted-foreground">Professional Valorant Esports Analysis & Match Predictions</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-sm text-green-600">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="font-medium">LIVE</span>
-          </div>
-          <Link href="/dashboard">
-            <Button variant="outline" className="flex items-center gap-2">
-              📊 Dashboard
-            </Button>
-          </Link>
-        </div>
+      {/* Hero Section */}
+      <div className="text-center pt-4">
+        <h1 className="text-3xl font-bold">Match Predictions</h1>
+        <p className="text-muted-foreground">Get ML-powered predictions for Valorant esports matches</p>
       </div>
 
       {/* Metrics Banner */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-lg border">
         <div className="text-center">
           <div className="text-2xl font-bold text-blue-600">64.3%</div>
           <div className="text-sm text-muted-foreground">Model Accuracy</div>

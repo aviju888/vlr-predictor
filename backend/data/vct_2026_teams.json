@@ -1,0 +1,68 @@
+{
+  "vct_2026_franchised_teams": {
+    "americas": [
+      "G2 Esports",
+      "Sentinels",
+      "MIBR",
+      "NRG Esports",
+      "Evil Geniuses",
+      "LOUD",
+      "100 Thieves",
+      "Cloud9",
+      "KR\u00dc Esports",
+      "Leviat\u00e1n",
+      "FURIA Esports",
+      "2Game Esports"
+    ],
+    "emea": [
+      "Fnatic",
+      "Team Liquid",
+      "Team Heretics",
+      "Team Vitality",
+      "Natus Vincere",
+      "Karmine Corp",
+      "BBL Esports",
+      "FUT Esports",
+      "Apeks",
+      "Gentle Mates",
+      "Movistar KOI",
+      "Giants Gaming"
+    ],
+    "pacific": [
+      "Paper Rex",
+      "T1",
+      "Rex Regum Qeon",
+      "DRX",
+      "Gen.G Esports",
+      "ZETA DIVISION",
+      "Talon Esports",
+      "DetonatioN FocusMe",
+      "Global Esports",
+      "Bleed Esports",
+      "Nongshim RedForce",
+      "Team Secret"
+    ],
+    "china": [
+      "Edward Gaming",
+      "Bilibili Gaming",
+      "Xi Lai Gaming",
+      "Wolves Esports",
+      "FunPlus Phoenix",
+      "JD Gaming",
+      "Titan Esports Club",
+      "Dragon Ranger Gaming",
+      "Nova Esports",
+      "All Gamers",
+      "TYLOO",
+      "NOVA"
+    ]
+  },
+  "total_teams": 48,
+  "regions": [
+    "americas",
+    "emea",
+    "pacific",
+    "china"
+  ],
+  "updated": "2026-01-26T22:11:23.887057"
+}

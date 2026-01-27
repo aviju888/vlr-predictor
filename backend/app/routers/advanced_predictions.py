@@ -11,6 +11,8 @@ from app.advanced_predictor import advanced_predictor
 from app.realistic_predictor import realistic_predictor
 from app.symmetric_predictor import symmetric_realistic_predictor
 from app.live_realistic_predictor import live_realistic_predictor
+from app.accuracy_tracker import accuracy_tracker
+from app.upstream import vlr_client
 from itertools import combinations
 
 # Add the project root to the path to import train_and_predict
@@ -24,6 +26,30 @@ except ImportError as e:
 
 router = APIRouter()
 logger = get_logger(__name__)
+
+# Valid maps in the current pool
+VALID_MAPS = {"Ascent", "Bind", "Breeze", "Haven", "Lotus", "Split", "Sunset", "Icebox", "Abyss"}
+
+
+def validate_map_name(map_name: str) -> None:
+    """Validate that map_name is in the current pool."""
+    if map_name not in VALID_MAPS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid map '{map_name}'. Valid maps are: {', '.join(sorted(VALID_MAPS))}"
+        )
+
+
+def validate_team_names(teamA: str, teamB: str) -> None:
+    """Validate that team names are reasonable."""
+    if not teamA or not teamA.strip():
+        raise HTTPException(status_code=422, detail="Team A name cannot be empty")
+    if not teamB or not teamB.strip():
+        raise HTTPException(status_code=422, detail="Team B name cannot be empty")
+    if teamA.strip().lower() == teamB.strip().lower():
+        raise HTTPException(status_code=422, detail="Team A and Team B cannot be the same team")
+    if len(teamA) > 100 or len(teamB) > 100:
+        raise HTTPException(status_code=422, detail="Team names must be less than 100 characters")
 
 class MapPredictionRequest(BaseModel):
     """Request model for map-level predictions."""
@@ -376,6 +402,10 @@ async def predict_map_realistic(
     map_name: str = Query(..., description="Name of the map")
 ):
     """Make a realistic prediction using only historical features (no data leakage)."""
+    # Validate inputs
+    validate_team_names(teamA, teamB)
+    validate_map_name(map_name)
+
     try:
         # Use the realistic predictor
         prediction = symmetric_realistic_predictor.predict(teamA, teamB, map_name)
@@ -398,6 +428,37 @@ async def predict_map_realistic(
         logger.error(f"Realistic map prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Realistic map prediction failed: {str(e)}")
 
+@router.get("/explain")
+async def explain_prediction(
+    teamA: str = Query(..., description="Name of team A"),
+    teamB: str = Query(..., description="Name of team B"),
+    map_name: str = Query(..., description="Name of the map")
+):
+    """Get SHAP-based explanation for a prediction.
+
+    Returns feature importance and human-readable explanations
+    for why the model predicts a certain outcome.
+    """
+    # Validate inputs
+    validate_team_names(teamA, teamB)
+    validate_map_name(map_name)
+
+    try:
+        # Use the realistic predictor's explain method
+        explanation = realistic_predictor.explain(teamA, teamB, map_name)
+
+        if "error" in explanation:
+            raise HTTPException(status_code=500, detail=explanation["error"])
+
+        return explanation
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Explanation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Explanation failed: {str(e)}")
+
+
 @router.get("/live/map-predict")
 async def predict_map_live(
     teamA: str = Query(..., description="Name of team A"),
@@ -405,13 +466,17 @@ async def predict_map_live(
     map_name: str = Query(..., description="Name of the map")
 ):
     """Make a prediction using live data cache with 365-day lookback.
-    
+
     This endpoint:
     - Fetches fresh team data from VLR.gg API if cache is stale
     - Uses 365-day historical window for comprehensive analysis
     - Caches results locally for fast subsequent queries
     - Provides detailed data freshness information
     """
+    # Validate inputs
+    validate_team_names(teamA, teamB)
+    validate_map_name(map_name)
+
     try:
         # Use the live realistic predictor
         prediction = await live_realistic_predictor.predict(teamA, teamB, map_name)
@@ -434,19 +499,296 @@ async def predict_map_live(
         
     except Exception as e:
         logger.error(f"Live map prediction failed: {e}")
-        # Graceful fallback to 50/50 to avoid frontend 500s
+        raise HTTPException(
+            status_code=500,
+            detail=f"Live map prediction failed: {str(e)}. Try using /advanced/realistic/map-predict instead."
+        )
+
+
+# ============================================================================
+# Accuracy Tracking Endpoints
+# ============================================================================
+
+class OutcomeRecordRequest(BaseModel):
+    """Request model for recording match outcomes."""
+    team_a: str
+    team_b: str
+    map_name: str
+    actual_winner: str
+
+
+@router.get("/accuracy/log-prediction")
+async def log_prediction_for_tracking(
+    teamA: str = Query(..., description="Name of team A"),
+    teamB: str = Query(..., description="Name of team B"),
+    map_name: str = Query(..., description="Name of the map"),
+    track: bool = Query(True, description="Whether to track this prediction")
+):
+    """Make a prediction and optionally log it for accuracy tracking.
+
+    Returns the prediction along with a tracking ID that can be used
+    to record the actual outcome later.
+    """
+    validate_team_names(teamA, teamB)
+    validate_map_name(map_name)
+
+    try:
+        # Make the prediction
+        prediction = symmetric_realistic_predictor.predict(teamA, teamB, map_name)
+
+        # Log for tracking if requested
+        tracking_id = None
+        if track:
+            tracking_id = accuracy_tracker.log_prediction(
+                team_a=teamA,
+                team_b=teamB,
+                map_name=map_name,
+                predicted_winner=prediction["winner"],
+                confidence=prediction["confidence"],
+                prob_team_a=prediction["prob_teamA"],
+                prob_team_b=prediction["prob_teamB"],
+                model_version=prediction["model_version"]
+            )
+
         return {
             "teamA": teamA,
             "teamB": teamB,
             "map_name": map_name,
-            "prob_teamA": 0.5,
-            "prob_teamB": 0.5,
-            "winner": teamA if teamA < teamB else teamB,
-            "confidence": 0.5,
-            "model_version": "live_realistic_v1.0",
-            "uncertainty": "High",
-            "explanation": f"Live map prediction failed: {str(e)}",
-            "features": {},
-            "data_freshness": "error",
-            "cache_stats": {}
+            "prob_teamA": prediction["prob_teamA"],
+            "prob_teamB": prediction["prob_teamB"],
+            "winner": prediction["winner"],
+            "confidence": prediction["confidence"],
+            "model_version": prediction["model_version"],
+            "tracking_id": tracking_id if track else None,
+            "is_tracked": track and tracking_id is not None and tracking_id > 0
         }
+
+    except Exception as e:
+        logger.error(f"Tracked prediction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+
+@router.post("/accuracy/record-outcome")
+async def record_match_outcome(request: OutcomeRecordRequest):
+    """Record the actual outcome of a previously predicted match.
+
+    The system will look up the most recent unresolved prediction
+    for this match and mark it with the actual winner.
+    """
+    try:
+        success = accuracy_tracker.record_outcome(
+            team_a=request.team_a,
+            team_b=request.team_b,
+            map_name=request.map_name,
+            actual_winner=request.actual_winner
+        )
+
+        if success:
+            return {
+                "status": "recorded",
+                "team_a": request.team_a,
+                "team_b": request.team_b,
+                "map_name": request.map_name,
+                "actual_winner": request.actual_winner
+            }
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No unresolved prediction found for {request.team_a} vs {request.team_b} on {request.map_name}"
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to record outcome: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to record outcome: {str(e)}")
+
+
+@router.get("/accuracy/stats")
+async def get_accuracy_statistics(
+    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
+    model_version: Optional[str] = Query(None, description="Filter by model version")
+):
+    """Get prediction accuracy statistics.
+
+    Returns overall accuracy, accuracy by confidence level, accuracy by map,
+    and recent predictions with their outcomes.
+    """
+    try:
+        stats = accuracy_tracker.get_accuracy_stats(days=days, model_version=model_version)
+
+        if "error" in stats:
+            raise HTTPException(status_code=500, detail=stats["error"])
+
+        return stats
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get accuracy stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get accuracy stats: {str(e)}")
+
+
+@router.get("/accuracy/pending")
+async def get_pending_predictions(
+    limit: int = Query(50, ge=1, le=200, description="Maximum predictions to return")
+):
+    """Get predictions that haven't had their outcomes recorded yet.
+
+    Use this to see which predictions need outcome recording.
+    """
+    try:
+        pending = accuracy_tracker.get_pending_predictions(limit=limit)
+        return {
+            "total": len(pending),
+            "predictions": pending
+        }
+    except Exception as e:
+        logger.error(f"Failed to get pending predictions: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pending predictions: {str(e)}")
+
+
+# ============================================================================
+# Upcoming/Live Matches Endpoints
+# ============================================================================
+
+@router.get("/upcoming-matches")
+async def get_upcoming_matches_with_predictions(
+    limit: int = Query(10, ge=1, le=50, description="Maximum matches to return"),
+    include_predictions: bool = Query(True, description="Include AI predictions")
+):
+    """Get upcoming VCT matches with optional AI predictions.
+
+    Fetches upcoming matches from VLR.gg and generates predictions
+    for each match using the realistic model.
+    """
+    try:
+        # Fetch upcoming matches from VLR.gg
+        matches = await vlr_client.get_matches(status="upcoming")
+
+        if not matches:
+            return {
+                "total": 0,
+                "matches": [],
+                "message": "No upcoming matches found"
+            }
+
+        # Process and optionally add predictions
+        processed_matches = []
+        for match in matches[:limit]:
+            team1 = match.get("team1", "").strip()
+            team2 = match.get("team2", "").strip()
+            tournament = match.get("tournament_name", "Unknown")
+            match_time = match.get("time_until_match", match.get("unix_timestamp", "TBD"))
+
+            if not team1 or not team2:
+                continue
+
+            match_data = {
+                "team1": team1,
+                "team2": team2,
+                "tournament": tournament,
+                "match_time": match_time,
+                "status": "upcoming"
+            }
+
+            # Add predictions if requested
+            if include_predictions:
+                try:
+                    # Use Ascent as default map for series prediction
+                    prediction = symmetric_realistic_predictor.predict(team1, team2, "Ascent")
+                    match_data["prediction"] = {
+                        "winner": prediction["winner"],
+                        "confidence": prediction["confidence"],
+                        "prob_team1": prediction["prob_teamA"],
+                        "prob_team2": prediction["prob_teamB"],
+                        "model_version": prediction["model_version"]
+                    }
+                except Exception as pred_error:
+                    logger.warning(f"Failed to predict {team1} vs {team2}: {pred_error}")
+                    match_data["prediction"] = None
+
+            processed_matches.append(match_data)
+
+        return {
+            "total": len(processed_matches),
+            "matches": processed_matches,
+            "data_source": "VLR.gg API"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get upcoming matches: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get upcoming matches: {str(e)}")
+
+
+@router.get("/live-matches")
+async def get_live_matches_with_predictions(
+    include_predictions: bool = Query(True, description="Include AI predictions")
+):
+    """Get currently live VCT matches with scores and predictions.
+
+    Fetches live matches from VLR.gg and shows current scores
+    along with AI predictions.
+    """
+    try:
+        # Fetch live matches from VLR.gg
+        matches = await vlr_client.get_matches(status="live")
+
+        if not matches:
+            return {
+                "total": 0,
+                "matches": [],
+                "message": "No live matches currently"
+            }
+
+        processed_matches = []
+        for match in matches:
+            team1 = match.get("team1", "").strip()
+            team2 = match.get("team2", "").strip()
+            score1 = match.get("score1", 0)
+            score2 = match.get("score2", 0)
+            tournament = match.get("tournament_name", "Unknown")
+            current_map = match.get("current_map", "Unknown")
+
+            if not team1 or not team2:
+                continue
+
+            match_data = {
+                "team1": team1,
+                "team2": team2,
+                "score1": score1,
+                "score2": score2,
+                "tournament": tournament,
+                "current_map": current_map,
+                "status": "live"
+            }
+
+            # Add predictions if requested
+            if include_predictions:
+                try:
+                    # Use current map or Ascent as default
+                    map_name = current_map if current_map in VALID_MAPS else "Ascent"
+                    prediction = symmetric_realistic_predictor.predict(team1, team2, map_name)
+                    match_data["prediction"] = {
+                        "winner": prediction["winner"],
+                        "confidence": prediction["confidence"],
+                        "prob_team1": prediction["prob_teamA"],
+                        "prob_team2": prediction["prob_teamB"],
+                        "map_used": map_name,
+                        "model_version": prediction["model_version"]
+                    }
+                except Exception as pred_error:
+                    logger.warning(f"Failed to predict {team1} vs {team2}: {pred_error}")
+                    match_data["prediction"] = None
+
+            processed_matches.append(match_data)
+
+        return {
+            "total": len(processed_matches),
+            "matches": processed_matches,
+            "data_source": "VLR.gg API"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get live matches: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get live matches: {str(e)}")
