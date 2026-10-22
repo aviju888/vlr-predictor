@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   fetchSystemMetrics,
@@ -12,7 +10,6 @@ import {
   fetchTeamAnalytics,
   fetchDataQuality,
   fetchRecentPredictions,
-  fetchLivePerformance
 } from "@/lib/api";
 
 interface SystemMetrics {
@@ -21,7 +18,6 @@ interface SystemMetrics {
   avg_response_time: number;
   uptime_hours: number;
   cache_hit_rate: number;
-  data_freshness_score: number;
 }
 
 interface ModelPerformance {
@@ -30,23 +26,25 @@ interface ModelPerformance {
   f1_score: number;
   brier_score: number;
   prediction_count: number;
-  confidence_distribution: Record<string, number>;
 }
 
 interface TeamAnalytic {
   team_name: string;
   total_matches: number;
   win_rate: number;
-  prediction_accuracy: number;
 }
 
 interface DataQuality {
   total_teams: number;
   total_matches: number;
   data_coverage_days: number;
-  cache_size_mb: number;
-  vct_team_coverage: number;
-  regional_distribution: Record<string, number>;
+}
+
+interface Prediction {
+  teamA: string;
+  teamB: string;
+  map: string;
+  confidence: number;
 }
 
 export default function Dashboard() {
@@ -55,8 +53,7 @@ export default function Dashboard() {
   const [modelPerformance, setModelPerformance] = useState<ModelPerformance[]>([]);
   const [teamAnalytics, setTeamAnalytics] = useState<TeamAnalytic[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality | null>(null);
-  const [recentPredictions, setRecentPredictions] = useState<any[]>([]);
-  const [livePerformance, setLivePerformance] = useState<any>(null);
+  const [recentPredictions, setRecentPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,31 +62,23 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
 
-      const [
-        systemData,
-        modelData,
-        teamData,
-        qualityData,
-        predictionsData,
-        liveData
-      ] = await Promise.allSettled([
-        fetchSystemMetrics(),
-        fetchModelPerformance(),
-        fetchTeamAnalytics(10),
-        fetchDataQuality(),
-        fetchRecentPredictions(10),
-        fetchLivePerformance()
-      ]);
+      const [systemData, modelData, teamData, qualityData, predictionsData] =
+        await Promise.allSettled([
+          fetchSystemMetrics(),
+          fetchModelPerformance(),
+          fetchTeamAnalytics(10),
+          fetchDataQuality(),
+          fetchRecentPredictions(10),
+        ]);
 
-      if (systemData.status === 'fulfilled') setSystemMetrics(systemData.value);
-      if (modelData.status === 'fulfilled') setModelPerformance(modelData.value);
-      if (teamData.status === 'fulfilled') setTeamAnalytics(teamData.value);
-      if (qualityData.status === 'fulfilled') setDataQuality(qualityData.value);
-      if (predictionsData.status === 'fulfilled') setRecentPredictions(predictionsData.value.recent_predictions || []);
-      if (liveData.status === 'fulfilled') setLivePerformance(liveData.value);
-
+      if (systemData.status === "fulfilled") setSystemMetrics(systemData.value);
+      if (modelData.status === "fulfilled") setModelPerformance(modelData.value);
+      if (teamData.status === "fulfilled") setTeamAnalytics(teamData.value);
+      if (qualityData.status === "fulfilled") setDataQuality(qualityData.value);
+      if (predictionsData.status === "fulfilled")
+        setRecentPredictions(predictionsData.value.recent_predictions || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -97,368 +86,203 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
   }, []);
 
   const tabs = [
-    { id: "overview", label: "Overview", icon: "📊" },
-    { id: "models", label: "Models", icon: "🤖" },
-    { id: "teams", label: "Teams", icon: "🏆" },
-    { id: "data", label: "Data Quality", icon: "📈" },
-    { id: "live", label: "Live Activity", icon: "⚡" }
+    { id: "overview", label: "Overview" },
+    { id: "models", label: "Models" },
+    { id: "teams", label: "Teams" },
+    { id: "data", label: "Data" },
   ];
 
   if (error) {
     return (
-      <div className="mx-auto max-w-6xl p-6">
+      <div className="mx-auto max-w-4xl p-6">
         <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-red-600">Dashboard Error</h1>
-          <p className="text-muted-foreground mt-2">{error}</p>
-          <Button onClick={loadData} className="mt-4">Retry</Button>
+          <h1 className="text-xl font-semibold text-destructive">Error</h1>
+          <p className="text-sm text-muted-foreground mt-2">{error}</p>
+          <Button onClick={loadData} variant="outline" size="sm" className="mt-4">
+            Retry
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-6 space-y-6">
-      {/* Header */}
+    <div className="mx-auto max-w-4xl p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">VLR Predictor Dashboard</h1>
-          <p className="text-muted-foreground">Real-time metrics and performance analytics</p>
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">System metrics and analytics</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-green-600 font-medium">LIVE</span>
-          </div>
-          <Button onClick={loadData} variant="outline" size="sm">
-            🔄 Refresh
-          </Button>
-        </div>
+        <Button onClick={loadData} variant="outline" size="sm">
+          Refresh
+        </Button>
       </div>
 
-      {/* Metrics Banner */}
+      {/* Metrics */}
       {systemMetrics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">
+          <Card className="p-4">
+            <div className="text-2xl font-semibold">
               {(systemMetrics.accuracy_rate * 100).toFixed(1)}%
             </div>
-            <div className="text-sm text-muted-foreground">Model Accuracy</div>
+            <div className="text-xs text-muted-foreground">Accuracy</div>
           </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
+          <Card className="p-4">
+            <div className="text-2xl font-semibold">
               {systemMetrics.total_predictions}
             </div>
-            <div className="text-sm text-muted-foreground">Total Predictions</div>
+            <div className="text-xs text-muted-foreground">Predictions</div>
           </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
+          <Card className="p-4">
+            <div className="text-2xl font-semibold">
               {(systemMetrics.cache_hit_rate * 100).toFixed(0)}%
             </div>
-            <div className="text-sm text-muted-foreground">Cache Hit Rate</div>
+            <div className="text-xs text-muted-foreground">Cache Hit</div>
           </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">
+          <Card className="p-4">
+            <div className="text-2xl font-semibold">
               {(systemMetrics.avg_response_time * 1000).toFixed(0)}ms
             </div>
-            <div className="text-sm text-muted-foreground">Response Time</div>
+            <div className="text-xs text-muted-foreground">Response</div>
           </Card>
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="flex space-x-1 bg-muted p-1 rounded-lg">
+      {/* Tabs */}
+      <div className="flex gap-1 border-b">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               activeTab === tab.id
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            <span>{tab.icon}</span>
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
-      {activeTab === "overview" && (
-        <div className="space-y-6">
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="p-6">
-                  <Skeleton className="h-4 w-3/4 mb-4" />
-                  <Skeleton className="h-8 w-1/2 mb-2" />
-                  <Skeleton className="h-4 w-full" />
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* System Health */}
-              <Card className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    ❤️
-                  </div>
-                  <h3 className="font-semibold">System Health</h3>
-                </div>
-                <div className="text-2xl font-bold text-green-600 mb-2">Excellent</div>
-                <div className="text-sm text-muted-foreground mb-4">All systems operational</div>
-                <div className="space-y-2">
+      {/* Content */}
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      ) : (
+        <>
+          {activeTab === "overview" && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="p-4">
+                <h3 className="font-medium mb-3">System Status</h3>
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-sm">Uptime</span>
-                    <span className="text-sm font-medium">{systemMetrics?.uptime_hours.toFixed(1)}h</span>
+                    <span className="text-muted-foreground">Status</span>
+                    <span>Operational</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Response Time</span>
-                    <span className="text-sm font-medium">{(systemMetrics?.avg_response_time * 1000).toFixed(0)}ms</span>
+                    <span className="text-muted-foreground">Uptime</span>
+                    <span>{systemMetrics?.uptime_hours.toFixed(1)}h</span>
                   </div>
                 </div>
               </Card>
-
-              {/* VCT Coverage */}
-              <Card className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    🌍
-                  </div>
-                  <h3 className="font-semibold">VCT Coverage</h3>
-                </div>
-                <div className="text-2xl font-bold text-blue-600 mb-2">42/42</div>
-                <div className="text-sm text-muted-foreground mb-4">Complete franchised teams</div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total Teams</span>
-                    <span className="text-sm font-medium">{dataQuality?.total_teams}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total Matches</span>
-                    <span className="text-sm font-medium">{dataQuality?.total_matches}</span>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Cache Performance */}
-              <Card className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    ⚡
-                  </div>
-                  <h3 className="font-semibold">Cache Performance</h3>
-                </div>
-                <div className="text-2xl font-bold text-purple-600 mb-2">
-                  {(systemMetrics?.cache_hit_rate * 100).toFixed(0)}%
-                </div>
-                <div className="text-sm text-muted-foreground mb-4">Excellent efficiency</div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Cache Size</span>
-                    <span className="text-sm font-medium">{dataQuality?.cache_size_mb}KB</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Data Freshness</span>
-                    <span className="text-sm font-medium">{(systemMetrics?.data_freshness_score * 100).toFixed(0)}%</span>
-                  </div>
+              <Card className="p-4">
+                <h3 className="font-medium mb-3">Recent Predictions</h3>
+                <div className="space-y-2 text-sm">
+                  {recentPredictions.slice(0, 4).map((pred, i) => (
+                    <div key={i} className="flex justify-between">
+                      <span className="text-muted-foreground truncate max-w-[180px]">
+                        {pred.teamA} vs {pred.teamB}
+                      </span>
+                      <span>{(pred.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                  ))}
                 </div>
               </Card>
             </div>
           )}
-        </div>
-      )}
 
-      {activeTab === "models" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {modelPerformance.map((model, index) => (
-              <Card key={index} className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    🤖
-                  </div>
-                  <h3 className="font-semibold">{model.model_name}</h3>
-                </div>
-                <div className="text-2xl font-bold text-blue-600 mb-2">
-                  {(model.accuracy * 100).toFixed(1)}%
-                </div>
-                <div className="text-sm text-muted-foreground mb-4">
-                  {index === 0 ? "Primary production model" : "Alternative model"}
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">F1 Score</span>
-                    <span className="text-sm font-medium">{model.f1_score.toFixed(3)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Brier Score</span>
-                    <span className="text-sm font-medium">{model.brier_score.toFixed(3)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm">Predictions</span>
-                    <span className="text-sm font-medium">{model.prediction_count}</span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === "teams" && (
-        <div className="space-y-6">
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Top Performing Teams</h3>
-            <div className="space-y-3">
-              {teamAnalytics.slice(0, 10).map((team, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold">
-                      {index + 1}
+          {activeTab === "models" && (
+            <div className="space-y-4">
+              {modelPerformance.map((model, i) => (
+                <Card key={i} className="p-4">
+                  <h3 className="font-medium mb-3">{model.model_name}</h3>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Accuracy</div>
+                      <div className="font-medium">
+                        {(model.accuracy * 100).toFixed(1)}%
+                      </div>
                     </div>
-                    <span className="font-medium">{team.team_name}</span>
+                    <div>
+                      <div className="text-muted-foreground">F1 Score</div>
+                      <div className="font-medium">{model.f1_score.toFixed(3)}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Brier</div>
+                      <div className="font-medium">{model.brier_score.toFixed(3)}</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-green-600 font-medium">
-                      {(team.win_rate * 100).toFixed(1)}%
-                    </span>
-                    <span className="text-muted-foreground">
-                      {team.total_matches}m
-                    </span>
-                  </div>
-                </div>
+                </Card>
               ))}
             </div>
-          </Card>
-        </div>
-      )}
+          )}
 
-      {activeTab === "data" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  📊
-                </div>
-                <h3 className="font-semibold">Dataset Overview</h3>
-              </div>
-              <div className="text-2xl font-bold text-green-600 mb-2">
-                {dataQuality?.total_matches}
-              </div>
-              <div className="text-sm text-muted-foreground mb-4">Total matches</div>
+          {activeTab === "teams" && (
+            <Card className="p-4">
+              <h3 className="font-medium mb-3">Top Teams</h3>
               <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Teams</span>
-                  <span className="text-sm font-medium">{dataQuality?.total_teams}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Coverage</span>
-                  <span className="text-sm font-medium">{dataQuality?.data_coverage_days}d</span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  🛡️
-                </div>
-                <h3 className="font-semibold">Data Quality</h3>
-              </div>
-              <div className="text-2xl font-bold text-blue-600 mb-2">95%</div>
-              <div className="text-sm text-muted-foreground mb-4">Excellent integrity</div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Zero Leakage</span>
-                  <Badge variant="secondary" className="text-xs">✅ Verified</Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Real VLR.gg Data</span>
-                  <Badge variant="secondary" className="text-xs">✅ Active</Badge>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  🌍
-                </div>
-                <h3 className="font-semibold">Regional Coverage</h3>
-              </div>
-              <div className="text-2xl font-bold text-purple-600 mb-2">
-                {((dataQuality?.vct_team_coverage || 0) * 100).toFixed(0)}%
-              </div>
-              <div className="text-sm text-muted-foreground mb-4">VCT coverage</div>
-              <div className="space-y-1">
-                {dataQuality?.regional_distribution && Object.entries(dataQuality.regional_distribution).map(([region, count]) => (
-                  <div key={region} className="flex justify-between text-sm">
-                    <span>{region}</span>
-                    <span className="font-medium">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "live" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  ⚡
-                </div>
-                <h3 className="font-semibold">Live Performance</h3>
-              </div>
-              <div className="text-2xl font-bold text-green-600 mb-2">
-                {livePerformance?.active_connections || 0}
-              </div>
-              <div className="text-sm text-muted-foreground mb-4">Active connections</div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Current Load</span>
-                  <span className="text-sm font-medium">{((livePerformance?.current_load || 0) * 100).toFixed(0)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Memory Usage</span>
-                  <span className="text-sm font-medium">{livePerformance?.memory_usage_mb}MB</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">API Calls/Hour</span>
-                  <span className="text-sm font-medium">{livePerformance?.api_calls_last_hour}</span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="font-semibold mb-4">Recent Predictions</h3>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {recentPredictions.slice(0, 8).map((pred, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-lg text-sm">
-                    <div>
-                      <div className="font-medium">{pred.teamA} vs {pred.teamB}</div>
-                      <div className="text-muted-foreground">{pred.map}</div>
+                {teamAnalytics.slice(0, 10).map((team, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between py-2 border-b last:border-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground w-6">
+                        {i + 1}
+                      </span>
+                      <span className="text-sm font-medium">{team.team_name}</span>
                     </div>
-                    <div className="text-blue-600 font-medium">
-                      {(pred.confidence * 100).toFixed(0)}%
+                    <div className="flex items-center gap-4 text-sm">
+                      <span>{(team.win_rate * 100).toFixed(1)}%</span>
+                      <span className="text-muted-foreground">
+                        {team.total_matches}m
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             </Card>
-          </div>
-        </div>
+          )}
+
+          {activeTab === "data" && (
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="p-4">
+                <div className="text-2xl font-semibold">
+                  {dataQuality?.total_matches}
+                </div>
+                <div className="text-xs text-muted-foreground">Total Matches</div>
+              </Card>
+              <Card className="p-4">
+                <div className="text-2xl font-semibold">
+                  {dataQuality?.total_teams}
+                </div>
+                <div className="text-xs text-muted-foreground">Teams</div>
+              </Card>
+              <Card className="p-4">
+                <div className="text-2xl font-semibold">
+                  {dataQuality?.data_coverage_days}d
+                </div>
+                <div className="text-xs text-muted-foreground">Coverage</div>
+              </Card>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
