@@ -27,16 +27,16 @@ export default function NavHeader() {
   };
 
   const navLinks = [
-    { href: "/", label: "Predict" },
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/history", label: "History" },
+    { href: "/classic", label: "Predict" },
+    { href: "/classic/dashboard", label: "Dashboard" },
+    { href: "/classic/history", label: "History" },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
-      <div className="mx-auto max-w-6xl flex h-12 items-center px-4">
-        <Link href="/" className="font-semibold mr-6">
-          VLR Predictor
+      <div className="mx-auto max-w-6xl flex min-h-12 flex-wrap gap-y-2 py-2 items-center px-4">
+        <Link href="/classic" className="font-semibold mr-6">
+          VLR Classic
         </Link>
 
         <nav className="flex items-center gap-1 flex-1">
@@ -51,6 +51,8 @@ export default function NavHeader() {
             </Link>
           ))}
         </nav>
+
+        <a href="/" className="px-2 text-xs underline underline-offset-4">Refreshed</a>
 
         {mounted && (
           <Button

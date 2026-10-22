@@ -1,0 +1,70 @@
+/* ─────────────────────────────────────────────────────────
+ * Craft layer — small rules from craft.gustavofior.com.
+ * Each class is named after the concept page it comes from.
+ * ───────────────────────────────────────────────────────── */
+
+@layer components {
+  /* Image Outlines: a 10% line painted on top of the outermost pixels,
+     so pale images and avatars keep their shape without a border. */
+  .image-outline {
+    outline: 1px solid var(--image-outline);
+    outline-offset: -1px;
+  }
+
+  /* Hit Areas: grow the clickable box without moving layout. */
+  .hit-area {
+    position: relative;
+  }
+  .hit-area::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+
+  /* Button Press: a quick, small scale on press. Never on hover. */
+  .press {
+    transition: transform 160ms var(--ease-out-strong);
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  /* Squircles: continuous corners where the browser supports them. */
+  @supports (corner-shape: squircle) {
+    .squircle {
+      corner-shape: squircle;
+    }
+  }
+
+  /* Scroll Fades: edges fade only in the directions that can still scroll.
+     ScrollFade sets data-fade-top / data-fade-bottom / data-fade-left / data-fade-right. */
+  .scroll-fade {
+    --fade: 28px;
+    --fade-top: 0px;
+    --fade-bottom: 0px;
+    --fade-left: 0px;
+    --fade-right: 0px;
+    mask-image:
+      linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%),
+      linear-gradient(to right, transparent 0, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent 100%);
+    mask-composite: intersect;
+  }
+  .scroll-fade[data-fade-top="true"] {
+    --fade-top: var(--fade);
+  }
+  .scroll-fade[data-fade-bottom="true"] {
+    --fade-bottom: var(--fade);
+  }
+  .scroll-fade[data-fade-left="true"] {
+    --fade-left: var(--fade);
+  }
+  .scroll-fade[data-fade-right="true"] {
+    --fade-right: var(--fade);
+  }
+
+  /* Tabular Numbers: stable slots for anything that changes or aligns. */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "cv11" 1;
+  }
+}

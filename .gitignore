@@ -186,3 +186,9 @@ coverage/
 
 # Railway
 .railway/
+
+# Extracted frontend domain source and deterministic models
+!frontend/src/modern/lib/
+!frontend/src/modern/lib/**
+!frontend/src/modern/lib/vlr/models/
+!frontend/src/modern/lib/vlr/models/**

@@ -1,15 +1,9 @@
 import type { NextConfig } from "next";
-
 const nextConfig: NextConfig = {
   output: "standalone",
-  eslint: {
-    // Allow builds to complete even with ESLint errors
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    // Allow builds to complete even with TypeScript errors
-    ignoreBuildErrors: true,
+  outputFileTracingIncludes: {
+    "/": ["./src/modern/lib/vlr/data/**/*"],
+    "/api/vlr/*": ["./src/modern/lib/vlr/data/**/*"],
   },
 };
-
 export default nextConfig;

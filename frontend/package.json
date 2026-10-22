@@ -12,12 +12,17 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-separator": "^1.1.7",
+    "@web-kits/audio": "^0.2.0",
+    "liveline": "^0.0.7",
+    "motion": "^14.0.0",
     "next": "^16.1.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "recharts": "^2.15.3",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
