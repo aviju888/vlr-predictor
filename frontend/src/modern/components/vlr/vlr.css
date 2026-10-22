@@ -1,0 +1,55 @@
+/* ─────────────────────────────────────────────────────────
+ * VLR — team colors for charts and marks.
+ * Team A wears the project accent (Valorant red); team B the
+ * reference palette's slot-1 blue. Validated with the dataviz
+ * six-checks script in both modes (CVD ΔE 22 light / 21 dark,
+ * normal-vision ΔE 33 / 32). Dark steps sit in the dark band.
+ * Text never wears these: names stay ink, a mark beside them
+ * carries the identity.
+ * ───────────────────────────────────────────────────────── */
+
+.vlr-root {
+  --team-a: #e63745;
+  --team-b: #2a78d6;
+  --team-a-tint: color-mix(in oklch, var(--team-a) 12%, var(--surface));
+  --team-b-tint: color-mix(in oklch, var(--team-b) 12%, var(--surface));
+}
+
+.dark .vlr-root {
+  --team-a: #f0555b;
+  --team-b: #3987e5;
+  --team-a-tint: color-mix(in oklch, var(--team-a) 18%, var(--surface));
+  --team-b-tint: color-mix(in oklch, var(--team-b) 18%, var(--surface));
+}
+
+/* a hairline 2px surface gap between touching fills (dataviz spacer) */
+.vlr-split > * + * {
+  margin-left: 2px;
+}
+
+@keyframes vlr-flow {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes vlr-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vlr-root [data-motion] {
+    animation: none !important;
+    transition: none !important;
+  }
+}

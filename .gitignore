@@ -15,6 +15,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+!frontend/src/lib/
+!frontend/src/lib/**
 lib64/
 parts/
 sdist/
@@ -184,3 +186,9 @@ coverage/
 
 # Railway
 .railway/
+
+# Extracted frontend domain source and deterministic models
+!frontend/src/modern/lib/
+!frontend/src/modern/lib/**
+!frontend/src/modern/lib/vlr/models/
+!frontend/src/modern/lib/vlr/models/**
